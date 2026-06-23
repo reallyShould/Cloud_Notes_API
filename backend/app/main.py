@@ -1,10 +1,13 @@
 import os
-import asyncio # Добавили для задержки времени
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import create_async_engine
-from app.database import Base
-from app.models import User, Note
+
+from .database import Base
+from .models import User, Note
+from .api.users import user_router
+from .api.system import system_router
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://admin:admin@db:5432/main_db")
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -25,17 +28,11 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(user_router)
+app.include_router(system_router)
 
 @app.get("/")
 async def root():
     return {"message": "Hello from FastAPI backend!"}
 
-@app.get("/health-check")
-async def health_check():
-    try:
-        async with engine.connect() as conn:
-            from sqlalchemy import text
-            await conn.execute(text("SELECT 1"))
-        return {"status": "ok", "database": "connected"}
-    except Exception as e:
-        return {"status": "error", "details": str(e)}
+
