@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="10ffa19c-116c-4396-b081-acc4365d7f7c" name="Changes" comment="feat(auth): add user registration endpoint /register">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.000036567858756" />
+      <entry key="MS500" value="1.1594402602713845" />
+      <entry key="S2" value="2.0369012946001748" />
+      <entry key="S5" value="2.9179588315234417" />
+      <entry key="S10" value="3.9442764375784267" />
+      <entry key="S30" value="5.975128975916014" />
+      <entry key="S60" value="7.501616355414999" />
+      <entry key="M2" value="8.860738996684757" />
+      <entry key="M5" value="10.246116769185662" />
+      <entry key="M10" value="13.61566329355252" />
+      <entry key="M15" value="19.66051170768075" />
+      <entry key="M30" value="43.33512172891082" />
+      <entry key="H1" value="80.72190112633929" />
+      <entry key="H2" value="117.12271998116657" />
+      <entry key="H4" value="143.24934964486405" />
+      <entry key="D1" value="170.74610578109915" />
+      <entry key="W1" value="176.0896740181564" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="2.4212288341794703E-247" />
+      <entry key="S5" value="2.2574302215131914E-99" />
+      <entry key="S10" value="4.751242547561711E-50" />
+      <entry key="S30" value="3.650681438246499E-17" />
+      <entry key="S60" value="6.92705959056661E-9" />
+      <entry key="M2" value="1.2949270290491452E-4" />
+      <entry key="M5" value="0.06292742731587705" />
+      <entry key="M10" value="0.6766840280397186" />
+      <entry key="M15" value="1.8324641565729651" />
+      <entry key="M30" value="6.154281137942594" />
+      <entry key="H1" value="12.458372685888625" />
+      <entry key="H2" value="18.188420609827304" />
+      <entry key="H4" value="22.115293160632834" />
+      <entry key="D1" value="26.109420278732333" />
+      <entry key="W1" value="26.870755896155774" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9726905156429336" />
+      <entry key="MS500" value="1.153111176677508" />
+      <entry key="S2" value="2.0343704626490418" />
+      <entry key="S5" value="2.9165751636653687" />
+      <entry key="S10" value="3.9433698871336023" />
+      <entry key="S30" value="5.974674024035729" />
+      <entry key="S60" value="7.501321561207278" />
+      <entry key="M2" value="8.860687558907202" />
+      <entry key="M5" value="10.308348144114053" />
+      <entry key="M10" value="14.288020371855659" />
+      <entry key="M15" value="21.48441501953523" />
+      <entry key="M30" value="49.473411794906546" />
+      <entry key="H1" value="93.16307862713442" />
+      <entry key="H2" value="135.29817251705433" />
+      <entry key="H4" value="165.35662372835444" />
+      <entry key="D1" value="196.85392504568125" />
+      <entry key="W1" value="202.96019393238134" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3FS6TmWPQDOEyOre1HA8tPgTr6F" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/reallyshould/Documents/Proj/Cloud_Notes_api&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
+    ]
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="10ffa19c-116c-4396-b081-acc4365d7f7c" name="Changes" comment="" />
+      <created>1782056133966</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1782056133966</updated>
+      <workItem from="1782056134979" duration="3362000" />
+      <workItem from="1782060581751" duration="12000" />
+      <workItem from="1782060612075" duration="6253000" />
+      <workItem from="1782184300833" duration="4326000" />
+      <workItem from="1782220465091" duration="7247000" />
+      <workItem from="1782227746269" duration="43000" />
+      <workItem from="1782315192194" duration="375000" />
+    </task>
+    <task id="LOCAL-00001" summary="Database init fix">
+      <option name="closed" value="true" />
+      <created>1782060464823</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1782060464823</updated>
+    </task>
+    <task id="LOCAL-00002" summary="feat(auth): add user registration endpoint /register">
+      <option name="closed" value="true" />
+      <created>1782227694865</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1782227694865</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Database init fix" />
+    <MESSAGE value="feat(auth): add user registration endpoint /register" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(auth): add user registration endpoint /register" />
+  </component>
+</project>
