@@ -5,3 +5,4 @@ asyncpg>=0.29.0
 passlib[bcrypt]
 bcrypt==4.0.1
 pydantic
+pyjwt
