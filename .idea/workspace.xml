@@ -4,11 +4,12 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="10ffa19c-116c-4396-b081-acc4365d7f7c" name="Changes" comment="feat(auth): add user login endpoint /login">
-      <change afterPath="$PROJECT_DIR$/backend/app/dependencies.py" afterDir="false" />
+    <list default="true" id="10ffa19c-116c-4396-b081-acc4365d7f7c" name="Changes" comment="feat(auth): add dependencies.py">
+      <change afterPath="$PROJECT_DIR$/backend/app/api/notes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/api/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/users.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,61 +40,61 @@
 }</component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000000656786632" />
-      <entry key="MS500" value="1.0372771992970875" />
-      <entry key="S2" value="1.7581957298118627" />
-      <entry key="S5" value="2.929874780211792" />
-      <entry key="S10" value="3.7617636646501458" />
-      <entry key="S30" value="4.858253683600255" />
-      <entry key="S60" value="5.864440823412917" />
-      <entry key="M2" value="8.798545291076666" />
-      <entry key="M5" value="21.08398143387158" />
-      <entry key="M10" value="39.61976169040483" />
-      <entry key="M15" value="55.09385992007943" />
-      <entry key="M30" value="92.23753545954924" />
-      <entry key="H1" value="148.19646531156897" />
-      <entry key="H2" value="216.47443689465186" />
-      <entry key="H4" value="276.51745727710687" />
-      <entry key="D1" value="350.5580106522829" />
-      <entry key="W1" value="366.2781791074271" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0000000045190092" />
+      <entry key="S30" value="1.0034112189309088" />
+      <entry key="S60" value="1.131405380891478" />
+      <entry key="M2" value="2.235577780493002" />
+      <entry key="M5" value="8.558821841133016" />
+      <entry key="M10" value="20.39783381148848" />
+      <entry key="M15" value="32.86180307482648" />
+      <entry key="M30" value="70.13249916127863" />
+      <entry key="H1" value="133.11597037019646" />
+      <entry key="H2" value="214.97812596402213" />
+      <entry key="H4" value="291.10577938209997" />
+      <entry key="D1" value="389.7078108668105" />
+      <entry key="W1" value="411.24986798280935" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="1.3812666414917428E-167" />
-      <entry key="S2" value="1.927832870173057E-42" />
-      <entry key="S5" value="2.0607616195356164E-17" />
-      <entry key="S10" value="4.540045064790544E-9" />
-      <entry key="S30" value="0.0017379136997364812" />
-      <entry key="S60" value="0.05375459859386356" />
-      <entry key="M2" value="0.47180929457573423" />
-      <entry key="M5" value="2.839710239237481" />
-      <entry key="M10" value="5.953534676301276" />
-      <entry key="M15" value="8.015799864370475" />
-      <entry key="M30" value="12.24281060395799" />
-      <entry key="H1" value="18.86131210797445" />
-      <entry key="H2" value="27.627496737151844" />
-      <entry key="H4" value="35.59202520509748" />
-      <entry key="D1" value="45.52104616533468" />
-      <entry key="W1" value="47.63410105853618" />
+      <entry key="MS500" value="8.25461517913033E-177" />
+      <entry key="S2" value="1.1934055081466479E-44" />
+      <entry key="S5" value="3.885333695919995E-18" />
+      <entry key="S10" value="2.7619973533789664E-9" />
+      <entry key="S30" value="0.002234160212469767" />
+      <entry key="S60" value="0.0702109834085208" />
+      <entry key="M2" value="0.4440106933605054" />
+      <entry key="M5" value="1.8223473375797827" />
+      <entry key="M10" value="3.8607575787397734" />
+      <entry key="M15" value="5.786352197943778" />
+      <entry key="M30" value="10.870058723951306" />
+      <entry key="H1" value="18.86788079815609" />
+      <entry key="H2" value="29.45268569109101" />
+      <entry key="H4" value="39.49325340701485" />
+      <entry key="D1" value="52.62247528066017" />
+      <entry key="W1" value="55.49908273443092" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.007041019257823417" />
-      <entry key="MS500" value="0.37857522487377526" />
-      <entry key="S2" value="1.3316583685101564" />
-      <entry key="S5" value="2.630704127733131" />
-      <entry key="S10" value="3.568913982780066" />
-      <entry key="S30" value="4.776552799208607" />
-      <entry key="S60" value="5.865212998235534" />
-      <entry key="M2" value="9.222760636983658" />
-      <entry key="M5" value="23.871276546866085" />
-      <entry key="M10" value="45.52464637645707" />
-      <entry key="M15" value="63.06575735555287" />
-      <entry key="M30" value="104.44522784707485" />
-      <entry key="H1" value="167.02973675365567" />
-      <entry key="H2" value="244.08104110023484" />
-      <entry key="H4" value="312.0959119613917" />
-      <entry key="D1" value="396.0761431905034" />
-      <entry key="W1" value="413.9118440525793" />
+      <entry key="MS100" value="0.6029039138453802" />
+      <entry key="MS500" value="0.9037527267510859" />
+      <entry key="S2" value="0.9750174876533334" />
+      <entry key="S5" value="0.9899310855458512" />
+      <entry key="S10" value="0.9949528124781138" />
+      <entry key="S30" value="1.003818852365955" />
+      <entry key="S60" value="1.1982138695994171" />
+      <entry key="M2" value="2.6686661911844696" />
+      <entry key="M5" value="10.359579428682508" />
+      <entry key="M10" value="24.234000357384616" />
+      <entry key="M15" value="38.622460943472554" />
+      <entry key="M30" value="80.97611073148612" />
+      <entry key="H1" value="151.9589313681206" />
+      <entry key="H2" value="244.4103353425591" />
+      <entry key="H4" value="330.5849365748905" />
+      <entry key="D1" value="442.3270878276172" />
+      <entry key="W1" value="466.74846710508126" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -199,7 +200,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782748234880</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="feat(auth): add dependencies.py">
+      <option name="closed" value="true" />
+      <created>1782833498251</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1782833498251</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -221,7 +230,8 @@
     <MESSAGE value="feat(auth): add user registration endpoint /register" />
     <MESSAGE value=".gitignore" />
     <MESSAGE value="feat(auth): add user login endpoint /login" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(auth): add user login endpoint /login" />
+    <MESSAGE value="feat(auth): add dependencies.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(auth): add dependencies.py" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Cloud_Notes_api$utils.coverage" NAME="utils Coverage Results" MODIFIED="1782747252716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />

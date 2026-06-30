@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from .database import Base
 from .models import User, Note
 from .api.users import user_router
+from .api.notes import notes_router
 from .api.system import system_router
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://admin:admin@db:5432/main_db")
@@ -27,8 +28,10 @@ async def lifespan(app: FastAPI):
             await asyncio.sleep(2)
     yield
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, swagger_ui_parameters={"withCredentials": True})
+
 app.include_router(user_router)
+app.include_router(notes_router)
 app.include_router(system_router)
 
 @app.get("/")

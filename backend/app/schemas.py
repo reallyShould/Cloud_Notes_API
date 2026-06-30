@@ -7,3 +7,7 @@ class Register(BaseModel):
 class Login(BaseModel):
     login: str
     password: str
+
+class NoteCreate(BaseModel):
+    title: str
+    text: str
