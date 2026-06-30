@@ -42,7 +42,7 @@ async def login(userdata:Login, response:Response, db: AsyncSession = Depends(ge
         key="access_token",
         value=token,
         httponly=True,
-        secure=True,
+        secure="db" not in DATABASE_URL,
         samesite="lax",
         max_age=1800
     )
