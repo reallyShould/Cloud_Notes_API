@@ -8,7 +8,6 @@ from ..database import get_db
 from ..models import User
 from ..utils import hash_password, verify_password, create_access_token
 
-
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
 @user_router.post("/register")
@@ -47,5 +46,7 @@ async def login(userdata:Login, response:Response, db: AsyncSession = Depends(ge
         samesite="lax",
         max_age=1800
     )
+
+    print(token)
 
     return {"message": "Login successful"}
