@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="10ffa19c-116c-4396-b081-acc4365d7f7c" name="Changes" comment="feat(auth): add dependencies.py">
-      <change afterPath="$PROJECT_DIR$/backend/app/api/notes.py" afterDir="false" />
+    <list default="true" id="10ffa19c-116c-4396-b081-acc4365d7f7c" name="Changes" comment="fix(auth): disable secure cookie flag for safari local development">
+      <change beforePath="$PROJECT_DIR$/.idea/Cloud_Notes_api.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Cloud_Notes_api.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/notes.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/notes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/api/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/users.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/database.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,61 +40,61 @@
 }</component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0" />
-      <entry key="S5" value="1.0" />
-      <entry key="S10" value="1.0000000045190092" />
-      <entry key="S30" value="1.0034112189309088" />
-      <entry key="S60" value="1.131405380891478" />
-      <entry key="M2" value="2.235577780493002" />
-      <entry key="M5" value="8.558821841133016" />
-      <entry key="M10" value="20.39783381148848" />
-      <entry key="M15" value="32.86180307482648" />
-      <entry key="M30" value="70.13249916127863" />
-      <entry key="H1" value="133.11597037019646" />
-      <entry key="H2" value="214.97812596402213" />
-      <entry key="H4" value="291.10577938209997" />
-      <entry key="D1" value="389.7078108668105" />
-      <entry key="W1" value="411.24986798280935" />
+      <entry key="MS100" value="1.0000001066953028" />
+      <entry key="MS500" value="1.0404119529612266" />
+      <entry key="S2" value="1.6150698393895357" />
+      <entry key="S5" value="2.6192594058885454" />
+      <entry key="S10" value="3.7113165067114857" />
+      <entry key="S30" value="6.4803729807475925" />
+      <entry key="S60" value="10.465661306920964" />
+      <entry key="M2" value="17.451651978746515" />
+      <entry key="M5" value="30.584430520388825" />
+      <entry key="M10" value="45.55634361789986" />
+      <entry key="M15" value="59.06158040727184" />
+      <entry key="M30" value="97.46372877384321" />
+      <entry key="H1" value="161.96890746242775" />
+      <entry key="H2" value="246.43341393759212" />
+      <entry key="H4" value="325.71109162708603" />
+      <entry key="D1" value="429.2902072856983" />
+      <entry key="W1" value="452.03634317480044" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="8.25461517913033E-177" />
-      <entry key="S2" value="1.1934055081466479E-44" />
-      <entry key="S5" value="3.885333695919995E-18" />
-      <entry key="S10" value="2.7619973533789664E-9" />
-      <entry key="S30" value="0.002234160212469767" />
-      <entry key="S60" value="0.0702109834085208" />
-      <entry key="M2" value="0.4440106933605054" />
-      <entry key="M5" value="1.8223473375797827" />
-      <entry key="M10" value="3.8607575787397734" />
-      <entry key="M15" value="5.786352197943778" />
-      <entry key="M30" value="10.870058723951306" />
-      <entry key="H1" value="18.86788079815609" />
-      <entry key="H2" value="29.45268569109101" />
-      <entry key="H4" value="39.49325340701485" />
-      <entry key="D1" value="52.62247528066017" />
-      <entry key="W1" value="55.49908273443092" />
+      <entry key="MS100" value="7.159065108307105E-31" />
+      <entry key="MS500" value="9.771994651368742E-7" />
+      <entry key="S2" value="0.04540212689357981" />
+      <entry key="S5" value="0.43287462107619673" />
+      <entry key="S10" value="0.9535075476792004" />
+      <entry key="S30" value="2.382197639224344" />
+      <entry key="S60" value="4.614632750293033" />
+      <entry key="M2" value="8.095648302277322" />
+      <entry key="M5" value="13.50854647462186" />
+      <entry key="M10" value="17.809949928068253" />
+      <entry key="M15" value="20.673706653296605" />
+      <entry key="M30" value="26.89974592167786" />
+      <entry key="H1" value="35.689863842834754" />
+      <entry key="H2" value="46.91041121417502" />
+      <entry key="H4" value="57.507140618725984" />
+      <entry key="D1" value="71.41114726842449" />
+      <entry key="W1" value="74.46741972796188" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.6029039138453802" />
-      <entry key="MS500" value="0.9037527267510859" />
-      <entry key="S2" value="0.9750174876533334" />
-      <entry key="S5" value="0.9899310855458512" />
-      <entry key="S10" value="0.9949528124781138" />
-      <entry key="S30" value="1.003818852365955" />
-      <entry key="S60" value="1.1982138695994171" />
-      <entry key="M2" value="2.6686661911844696" />
-      <entry key="M5" value="10.359579428682508" />
-      <entry key="M10" value="24.234000357384616" />
-      <entry key="M15" value="38.622460943472554" />
-      <entry key="M30" value="80.97611073148612" />
-      <entry key="H1" value="151.9589313681206" />
-      <entry key="H2" value="244.4103353425591" />
-      <entry key="H4" value="330.5849365748905" />
-      <entry key="D1" value="442.3270878276172" />
-      <entry key="W1" value="466.74846710508126" />
+      <entry key="MS100" value="3.073704145372841E-5" />
+      <entry key="MS500" value="0.14873507512099213" />
+      <entry key="S2" value="1.140865512024652" />
+      <entry key="S5" value="2.64848062758708" />
+      <entry key="S10" value="4.345359046754751" />
+      <entry key="S30" value="8.654696272476984" />
+      <entry key="S60" value="14.888629380595011" />
+      <entry key="M2" value="25.37768549495868" />
+      <entry key="M5" value="43.97795690009181" />
+      <entry key="M10" value="63.287362036809576" />
+      <entry key="M15" value="79.67143830178918" />
+      <entry key="M30" value="124.3168596455051" />
+      <entry key="H1" value="197.62332588096768" />
+      <entry key="H2" value="293.31782047099824" />
+      <entry key="H4" value="383.2012177155977" />
+      <entry key="D1" value="500.6976286588079" />
+      <entry key="W1" value="526.5032024830973" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -109,34 +109,34 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.utils.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/reallyshould/Documents/Proj/Cloud_Notes_api&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.utils.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/Users/reallyshould/Documents/Proj/Cloud_Notes_api",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "editor.preferences.completion.inline",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;postgresql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/backend/app" />
@@ -208,7 +208,23 @@
       <option name="project" value="LOCAL" />
       <updated>1782833498251</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="feat(notes): add endpoint to create notes">
+      <option name="closed" value="true" />
+      <created>1782835958814</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1782835958814</updated>
+    </task>
+    <task id="LOCAL-00007" summary="fix(auth): disable secure cookie flag for safari local development">
+      <option name="closed" value="true" />
+      <created>1782835979714</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1782835979714</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -231,7 +247,9 @@
     <MESSAGE value=".gitignore" />
     <MESSAGE value="feat(auth): add user login endpoint /login" />
     <MESSAGE value="feat(auth): add dependencies.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(auth): add dependencies.py" />
+    <MESSAGE value="feat(notes): add endpoint to create notes" />
+    <MESSAGE value="fix(auth): disable secure cookie flag for safari local development" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix(auth): disable secure cookie flag for safari local development" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Cloud_Notes_api$utils.coverage" NAME="utils Coverage Results" MODIFIED="1782747252716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />

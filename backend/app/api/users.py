@@ -47,6 +47,4 @@ async def login(userdata:Login, response:Response, db: AsyncSession = Depends(ge
         max_age=1800
     )
 
-    print(token)
-
     return {"message": "Login successful"}

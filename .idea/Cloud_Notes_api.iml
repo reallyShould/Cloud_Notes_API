@@ -5,7 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/backend" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Docker Compose (server)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.14 (Cloud_Notes_api)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
