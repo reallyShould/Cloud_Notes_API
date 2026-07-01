@@ -32,3 +32,14 @@ async def get_note(note_id: int, db: AsyncSession = Depends(get_db), current_use
     if note is None:
         raise HTTPException(status_code=404, detail="Note not found")
     return note
+
+@notes_router.delete("/{note_id}")
+async def delete_note(note_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    query = select(Note).where(Note.creator_id == current_user.id, Note.id == note_id)
+    result = await db.execute(query)
+    note = result.scalar_one_or_none()
+    if note is None:
+        raise HTTPException(status_code=404, detail="Note not found")
+    await db.delete(note)
+    await db.commit()
+    return {"message": "Note deleted successfully"}
