@@ -4,11 +4,10 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="10ffa19c-116c-4396-b081-acc4365d7f7c" name="Changes" comment="feat(auth): add get note endpoint /notes">
+    <list default="true" id="10ffa19c-116c-4396-b081-acc4365d7f7c" name="Changes" comment="feat(notes): add get note by id endpoint">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/notes.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/notes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/users.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/__init__.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,61 +38,61 @@
 }</component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="4.582061529545904E-8" />
-      <entry key="MS500" value="0.0417677092198481" />
-      <entry key="S2" value="0.9668770463797197" />
-      <entry key="S5" value="2.375821351084713" />
-      <entry key="S10" value="3.3883457835232926" />
-      <entry key="S30" value="4.408798251068562" />
-      <entry key="S60" value="5.105314855412949" />
-      <entry key="M2" value="7.120811018067838" />
-      <entry key="M5" value="16.063367355779768" />
-      <entry key="M10" value="31.349790550846265" />
-      <entry key="M15" value="46.05650726849011" />
-      <entry key="M30" value="87.75552759950531" />
-      <entry key="H1" value="159.10278665598725" />
-      <entry key="H2" value="256.31536808679726" />
-      <entry key="H4" value="351.68535541715295" />
-      <entry key="D1" value="481.62423492706904" />
-      <entry key="W1" value="510.87780637815973" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.000082686663691" />
+      <entry key="S2" value="1.1006979409515354" />
+      <entry key="S5" value="1.5139230593395925" />
+      <entry key="S10" value="1.976147731683382" />
+      <entry key="S30" value="2.564979877013179" />
+      <entry key="S60" value="2.905166126036841" />
+      <entry key="M2" value="3.732865891246203" />
+      <entry key="M5" value="6.091044121428373" />
+      <entry key="M10" value="10.08413268934397" />
+      <entry key="M15" value="13.966083643744462" />
+      <entry key="M30" value="22.57058638305985" />
+      <entry key="H1" value="31.986840355053005" />
+      <entry key="H2" value="49.77774239478332" />
+      <entry key="H4" value="115.47487605650245" />
+      <entry key="D1" value="418.66474442499236" />
+      <entry key="W1" value="542.6022992970475" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0" />
-      <entry key="S5" value="1.0" />
-      <entry key="S10" value="1.0000000000000457" />
-      <entry key="S30" value="1.0000730032222969" />
-      <entry key="S60" value="1.0167469631251318" />
-      <entry key="M2" value="1.3677142581041983" />
-      <entry key="M5" value="4.4796260873229725" />
-      <entry key="M10" value="10.172881720192644" />
-      <entry key="M15" value="15.139518095579739" />
-      <entry key="M30" value="26.31378823160413" />
-      <entry key="H1" value="40.239369173663775" />
-      <entry key="H2" value="55.94079942766721" />
-      <entry key="H4" value="70.25280119182646" />
-      <entry key="D1" value="89.0906373026626" />
-      <entry key="W1" value="93.26999733470069" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="1.5190673774038225E-167" />
+      <entry key="M2" value="5.286612165295779E-84" />
+      <entry key="M5" value="1.9324781660322648E-33" />
+      <entry key="M10" value="2.1129071381994928E-16" />
+      <entry key="M15" value="1.1439393382732152E-10" />
+      <entry key="M30" value="7.233172908892271E-5" />
+      <entry key="H1" value="0.06671506286951324" />
+      <entry key="H2" value="2.277797103482964" />
+      <entry key="H4" value="14.176102004459402" />
+      <entry key="D1" value="68.23087325263953" />
+      <entry key="W1" value="89.78252230052607" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.0046776942223702" />
-      <entry key="MS500" value="0.3771912645502391" />
-      <entry key="S2" value="1.5301338031506286" />
-      <entry key="S5" value="3.0024547858033346" />
-      <entry key="S10" value="4.126319686657751" />
-      <entry key="S30" value="5.295884988641067" />
-      <entry key="S60" value="6.056211739391799" />
-      <entry key="M2" value="8.44143483204755" />
-      <entry key="M5" value="20.494896444201355" />
-      <entry key="M10" value="41.47306639267635" />
-      <entry key="M15" value="61.147570170260614" />
-      <entry key="M30" value="114.02566462745601" />
-      <entry key="H1" value="199.3054712618759" />
-      <entry key="H2" value="312.22795099983983" />
-      <entry key="H4" value="421.91916320945256" />
-      <entry key="D1" value="570.7105858021957" />
-      <entry key="W1" value="604.1471551240933" />
+      <entry key="MS100" value="0.9592641193252643" />
+      <entry key="MS500" value="0.9917988462423589" />
+      <entry key="S2" value="1.0984444677105019" />
+      <entry key="S5" value="1.512718445842701" />
+      <entry key="S10" value="1.9753693501666139" />
+      <entry key="S30" value="2.5646442697793383" />
+      <entry key="S60" value="2.9049787046955884" />
+      <entry key="M2" value="3.732752467865256" />
+      <entry key="M5" value="6.0909735674265475" />
+      <entry key="M10" value="10.084068495582297" />
+      <entry key="M15" value="13.966020644944118" />
+      <entry key="M30" value="22.570604256309057" />
+      <entry key="H1" value="32.05345515405331" />
+      <entry key="H2" value="52.054365724071964" />
+      <entry key="H4" value="129.64713126776687" />
+      <entry key="D1" value="486.89233221768427" />
+      <entry key="W1" value="632.3841968720322" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -231,7 +230,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782879895512</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="feat(notes): add get note by id endpoint">
+      <option name="closed" value="true" />
+      <created>1782907040057</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1782907040057</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -257,7 +264,8 @@
     <MESSAGE value="feat(notes): add endpoint to create notes" />
     <MESSAGE value="fix(auth): disable secure cookie flag for safari local development" />
     <MESSAGE value="feat(auth): add get note endpoint /notes" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(auth): add get note endpoint /notes" />
+    <MESSAGE value="feat(notes): add get note by id endpoint" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(notes): add get note by id endpoint" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Cloud_Notes_api$utils.coverage" NAME="utils Coverage Results" MODIFIED="1782747252716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
