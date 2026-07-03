@@ -47,3 +47,11 @@ async def login(userdata:Login, response:Response, db: AsyncSession = Depends(ge
     )
 
     return {"message": "Login successful"}
+
+
+@user_router.post("/logout")
+async def logout(response: Response):
+    response.delete_cookie(key="access_token")
+
+    return {"message": "Logout successful"}
+
