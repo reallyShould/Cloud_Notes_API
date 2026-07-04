@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 from ..database import get_db
 
-system_router = APIRouter(prefix="/system", tags=["system"])
+system_router = APIRouter(prefix="/system", tags=["System"])
 
 @system_router.get("/health-check")
 async def health_check(db: AsyncSession = Depends(get_db)):

@@ -8,7 +8,7 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..schemas import NoteCreate, NoteUpdate
 
-notes_router = APIRouter(prefix="/notes", tags=["notes"])
+notes_router = APIRouter(prefix="/notes", tags=["Notes"])
 
 @notes_router.post("")
 async def create_note(userdata: NoteCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
