@@ -11,6 +11,7 @@ from ..database import get_db
 from ..models import User, Attachment
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+MAX_FILE_SIZE = 25 * 1024 * 1024
 
 attachments_router = APIRouter(prefix="/attachments", tags=["Attachments"])
 
@@ -27,6 +28,12 @@ async def upload_attachments(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+
+    if file.size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File is too large. Maximum allowed size is 25 MB."
         )
 
     file_uuid = uuid.uuid4()
