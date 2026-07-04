@@ -9,6 +9,7 @@ from .models import User, Note
 from .api.users import user_router
 from .api.notes import notes_router
 from .api.system import system_router
+from .api.attachments import attachments_router
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://admin:admin@db:5432/main_db")
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -33,6 +34,7 @@ app = FastAPI(lifespan=lifespan, swagger_ui_parameters={"withCredentials": True}
 app.include_router(user_router)
 app.include_router(notes_router)
 app.include_router(system_router)
+app.include_router(attachments_router)
 
 @app.get("/")
 async def root():

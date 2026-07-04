@@ -26,3 +26,10 @@ class Note(Base):
     creator_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
     creator: Mapped["User"] = relationship(back_populates="notes")
+
+class Attachment(Base):
+    __tablename__ = "attachments"
+
+    id: Mapped[str] = mapped_column(String(256), primary_key=True)
+    original_name: Mapped[str] = mapped_column(String(256), nullable=False)
+    creator_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
