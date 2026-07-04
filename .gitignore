@@ -181,3 +181,6 @@ cython_debug/
 .cursorindexingignore
 .DS_Store
 .idea
+
+backend/uploads/*
+!backend/uploads/README.md
