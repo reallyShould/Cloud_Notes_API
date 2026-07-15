@@ -1,6 +1,6 @@
 # ⚙️ Cloud_Notes
 
-Full-stack cloud notes workspace powered by FastAPI, PostgreSQL, React, and Vite. Includes registration, authorization, notes CRUD, and image attachments in a polished browser UI.
+Full-stack premium writing workspace powered by FastAPI, PostgreSQL, React, Tiptap, and Docker. Includes registration, authorization, rich text editing, autosave, note organization, and image attachments in a polished browser UI.
 
 ---
 
@@ -20,8 +20,8 @@ Full-stack cloud notes workspace powered by FastAPI, PostgreSQL, React, and Vite
 - **ORM:** [SQLAlchemy 2.0](https://sqlalchemy.org) (Async extension with `asyncpg`)
 - **Data Validation:** [Pydantic v2](https://pydantic.dev)
 - **Security:** JWT (JSON Web Tokens) inside secure **HttpOnly Cookies** + `bcrypt` password hashing
-- **Frontend:** [React 19](https://react.dev) + [Vite](https://vite.dev)
-- **Environment:** [Docker](https://docker.com) / [OrbStack](https://orbstack.dev) for full containerization
+- **Frontend:** [React 19](https://react.dev) + [Vite](https://vite.dev) + [Tiptap](https://tiptap.dev)
+- **Environment:** [Docker](https://docker.com) / [OrbStack](https://orbstack.dev) with production-ready containers
 
 ## 🚀 Quick Start (Docker)
 
@@ -33,17 +33,45 @@ Make sure you have **Docker** or **OrbStack** running on your system. You don't 
    cd Cloud_Notes_api
    ```
 
-2. **Launch the environment:**
-   This command creates the database and starts the full stack:
+2. **Prepare environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Launch the production-like environment:**
+   This command builds the backend image, builds the frontend static bundle, starts PostgreSQL, and serves the app through Nginx:
    ```bash
    docker compose up --build
    ```
 
-3. **Open the apps:**
+4. **Open the apps:**
    - **Web UI:** `http://localhost:5173`
-   - **Interactive API Docs (Swagger UI):** `http://localhost:8000/docs`
+   - **API Docs (Swagger UI):** `http://localhost:8000/docs`
 
 ---
+
+## 🐳 Container Notes
+
+- `frontend` is built as static assets and served by **Nginx**
+- browser API calls go through `/api`, which Nginx proxies to the FastAPI container
+- `server` stores uploaded attachments in a persistent Docker volume
+- `db` stores PostgreSQL data in a persistent Docker volume
+- for production, replace `JWT_SECRET_KEY` and set `COOKIE_SECURE=true` behind HTTPS
+
+## 🧪 Development Mode
+
+For hot reload during active development:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+This mode differs from the default stack:
+
+- `frontend` runs Vite dev server on `http://localhost:5173`
+- `server` runs `uvicorn --reload`
+- source folders are mounted into the containers
+- PostgreSQL still runs in Docker, so no local DB install is required
 
 ## 📂 Project Structure
 
@@ -63,16 +91,21 @@ Cloud_Notes/
 │   │   ├── schemas.py    # Pydantic validation DTOs
 │   │   └── utils.py      # Password hashing & JWT utility functions
 │   ├── Dockerfile
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── .dockerignore
 ├── frontend/
 │   ├── src/
-│   │   ├── App.tsx       # Auth flow and notes workspace UI
+│   │   ├── App.tsx       # Auth flow and premium notes workspace UI
 │   │   ├── App.css       # Main application layout and components
 │   │   ├── index.css     # Global tokens, typography, background
 │   │   ├── lib/api.ts    # Browser API client with cookie credentials
 │   │   └── types.ts      # Shared frontend models
+│   ├── Dockerfile
+│   ├── nginx.conf
 │   ├── package.json
 │   └── vite.config.ts
+├── .env.example
+├── docker-compose.dev.yml
 ├── docker-compose.yml
 └── README.md
 ```
@@ -89,6 +122,10 @@ Cloud_Notes/
 ## ✨ Product Features
 
 - Registration and login with secure cookie-based sessions
-- Personal notes workspace with create, edit, delete, and search
-- Image uploads that are inserted into note content as Markdown links
-- Responsive editorial-style interface for desktop and mobile
+- Rich text editor with visual formatting toolbar
+- Autosave without cursor reset during editing
+- Pinned, favorite, archived, and searchable notes
+- Drag-and-drop image uploads inside the editor
+- Slash command palette for fast block insertion
+- Focus mode for distraction-free writing
+- Responsive premium workspace for desktop and mobile
