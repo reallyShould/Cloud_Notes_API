@@ -268,6 +268,12 @@ function App() {
   }, [locale])
 
   useEffect(() => {
+    document.title = selectedNote?.title
+      ? `${selectedNote.title} — Cloud Notes`
+      : 'Cloud Notes'
+  }, [selectedNote?.title])
+
+  useEffect(() => {
     if (sessionStatus !== 'authenticated') {
       return
     }
