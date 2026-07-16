@@ -1,80 +1,106 @@
+import os
+import uuid
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
-
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-import os, uuid
-
-from ..dependencies import get_current_user
 from ..database import get_db
-from ..models import User, Attachment
+from ..dependencies import get_current_user
+from ..models import Attachment, User
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_FILE_SIZE = 25 * 1024 * 1024
+CHUNK_SIZE = 1024 * 1024
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "uploads"))
 
 attachments_router = APIRouter(prefix="/attachments", tags=["Attachments"])
 
 
+def has_valid_image_signature(extension: str, header: bytes) -> bool:
+    if extension in {".jpg", ".jpeg"}:
+        return header.startswith(b"\xff\xd8\xff")
+    if extension == ".png":
+        return header.startswith(b"\x89PNG\r\n\x1a\n")
+    if extension == ".gif":
+        return header.startswith((b"GIF87a", b"GIF89a"))
+    if extension == ".webp":
+        return len(header) >= 12 and header[:4] == b"RIFF" and header[8:12] == b"WEBP"
+    return False
+
+
 @attachments_router.post("")
-async def upload_attachments(
-        file: UploadFile,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+async def upload_attachment(
+    file: UploadFile,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    extension = os.path.splitext(file.filename)[1].lower()
+    original_name = file.filename or "upload"
+    extension = Path(original_name).suffix.lower()
 
-    if extension not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
-        )
+    if extension not in ALLOWED_EXTENSIONS or file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="Unsupported image type")
 
-    if file.size > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="File is too large. Maximum allowed size is 25 MB."
-        )
-
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     file_uuid = uuid.uuid4()
-    saved_name = f"{file_uuid}{extension}"
+    file_path = UPLOAD_DIR / f"{file_uuid}{extension}"
+    total_size = 0
+    header = b""
 
-    file_path = f"uploads/{saved_name}"
-    file_bytes = await file.read()
+    try:
+        with file_path.open("wb") as destination:
+            while chunk := await file.read(CHUNK_SIZE):
+                if not header:
+                    header = chunk[:16]
+                total_size += len(chunk)
+                if total_size > MAX_FILE_SIZE:
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail="File is too large. Maximum allowed size is 25 MB.",
+                    )
+                destination.write(chunk)
 
-    with open(file_path, "wb") as buffer:
-        buffer.write(file_bytes)
+        if not has_valid_image_signature(extension, header):
+            raise HTTPException(status_code=400, detail="File content is not a valid image")
 
-    new_attachment = Attachment(
-        id=str(file_uuid),
-        original_name=file.filename,
-        creator_id=current_user.id
-    )
+        attachment = Attachment(
+            id=str(file_uuid),
+            original_name=original_name,
+            creator_id=current_user.id,
+        )
+        db.add(attachment)
+        await db.commit()
+    except Exception:
+        file_path.unlink(missing_ok=True)
+        raise
+    finally:
+        await file.close()
 
-    db.add(new_attachment)
-    await db.commit()
+    return {"url": f"/api/attachments/download/{file_uuid}"}
 
-    return {"url": f"http://localhost:8000/attachments/download/{file_uuid}"}
 
 @attachments_router.get("/download/{file_uuid}")
 async def download_attachment(
-    file_uuid: str,
+    file_uuid: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    query = select(Attachment).where(Attachment.id == file_uuid)
-    result = await db.execute(query)
+    attachment_id = str(file_uuid)
+    result = await db.execute(
+        select(Attachment).where(
+            Attachment.id == attachment_id,
+            Attachment.creator_id == current_user.id,
+        )
+    )
     attachment = result.scalar_one_or_none()
-
-    if attachment is None or attachment.creator_id != current_user.id:
+    if attachment is None:
         raise HTTPException(status_code=404, detail="File not found")
 
-    files = [f for f in os.listdir("uploads") if f.startswith(file_uuid)]
-    if not files:
+    files = list(UPLOAD_DIR.glob(f"{attachment_id}.*"))
+    if len(files) != 1:
         raise HTTPException(status_code=404, detail="File on disk not found")
 
-    file_name = files[0]
-    file_path = f"uploads/{file_name}"
-
-    return FileResponse(file_path)
-
+    return FileResponse(files[0], filename=attachment.original_name)
