@@ -1,4 +1,5 @@
 import json
+import re
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -11,6 +12,9 @@ from ..dependencies import get_current_user
 from ..schemas import NoteCreate, NoteUpdate, NotePublic
 
 notes_router = APIRouter(prefix="/notes", tags=["Notes"])
+LEGACY_ATTACHMENT_URL = re.compile(
+    r"https?://(?:localhost|127\.0\.0\.1):8000/attachments/download/"
+)
 
 
 def normalize_tags(tags: list[str]) -> list[str]:
@@ -32,10 +36,15 @@ def serialize_note(note: Note) -> NotePublic:
     except json.JSONDecodeError:
         tags = []
 
+    normalized_text = LEGACY_ATTACHMENT_URL.sub(
+        "/api/attachments/download/",
+        note.text or "",
+    )
+
     return NotePublic(
         id=note.id,
         title=note.title,
-        text=note.text,
+        text=normalized_text,
         summary=note.summary,
         tags=tags if isinstance(tags, list) else [],
         is_pinned=note.is_pinned,
