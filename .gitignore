@@ -184,3 +184,36 @@ cython_debug/
 
 backend/uploads/*
 !backend/uploads/README.md
+!frontend/src/lib/
+!frontend/src/lib/**
+
+# Node.js / frontend dependencies and build artifacts
+node_modules/
+.pnpm-store/
+dist/
+dist-ssr/
+*.tsbuildinfo
+vite.config.*.timestamp-*
+
+# Frontend tooling caches
+.vite/
+.eslintcache
+.stylelintcache
+
+# Local environment files (examples must stay versioned)
+.env.*
+!.env.example
+!**/.env.example
+
+# Package manager and development logs
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors and operating systems
+.vscode/
+*.swp
+*.swo
+Thumbs.db

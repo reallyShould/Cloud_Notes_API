@@ -1,16 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from ..schemas import Register, Login
+import os
+
+from ..schemas import Register, Login, ThemeUpdate, UserPublic
 from ..database import get_db
 from ..models import User
+from ..dependencies import get_current_user
 from ..utils import hash_password, verify_password, create_access_token
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
-@user_router.post("/register")
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+
+@user_router.post("/register", response_model=UserPublic)
 async def register(userdata:Register, db: AsyncSession = Depends(get_db)):
     query = select(User).where(User.login == userdata.login)
     result = await db.execute(query)
@@ -42,6 +47,7 @@ async def login(userdata:Login, response:Response, db: AsyncSession = Depends(ge
         key="access_token",
         value=token,
         httponly=True,
+        secure=COOKIE_SECURE,
         samesite="lax",
         max_age=1800
     )
@@ -51,7 +57,22 @@ async def login(userdata:Login, response:Response, db: AsyncSession = Depends(ge
 
 @user_router.post("/logout")
 async def logout(response: Response):
-    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="access_token", secure=COOKIE_SECURE, samesite="lax")
 
     return {"message": "Logout successful"}
 
+
+@user_router.get("/me", response_model=UserPublic)
+async def current_user(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@user_router.patch("/me/theme", response_model=UserPublic)
+async def update_theme(
+    payload: ThemeUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    current_user.theme = payload.theme
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user

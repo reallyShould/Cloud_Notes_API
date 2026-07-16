@@ -3,6 +3,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import create_async_engine
+from fastapi.middleware.cors import CORSMiddleware
 
 from .database import Base
 from .models import User, Note
@@ -31,6 +32,20 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, swagger_ui_parameters={"withCredentials": True})
 
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+    if origin.strip()
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(user_router)
 app.include_router(notes_router)
 app.include_router(system_router)
@@ -39,5 +54,3 @@ app.include_router(attachments_router)
 @app.get("/")
 async def root():
     return {"message": "Hello from FastAPI backend!"}
-
-
