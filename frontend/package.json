@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tiptap/extension-code-block": "3.27.4",
     "@tiptap/extension-color": "^3.27.4",
     "@tiptap/extension-highlight": "^3.27.4",
     "@tiptap/extension-image": "^3.27.4",

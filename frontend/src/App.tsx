@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
-import { EditorContent, useEditor } from '@tiptap/react'
+import type { FormEvent, PointerEvent as ReactPointerEvent } from 'react'
+import {
+  EditorContent,
+  NodeViewContent,
+  NodeViewWrapper,
+  ReactNodeViewRenderer,
+  useEditor,
+  useEditorState,
+} from '@tiptap/react'
+import type { NodeViewProps } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
@@ -12,6 +20,7 @@ import Highlight from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
 import Image from '@tiptap/extension-image'
+import CodeBlock from '@tiptap/extension-code-block'
 import { Table } from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
@@ -19,6 +28,7 @@ import TableHeader from '@tiptap/extension-table-header'
 import {
   Archive,
   Bold,
+  Check,
   CheckSquare,
   Code2,
   Copy,
@@ -26,7 +36,6 @@ import {
   Highlighter,
   Heading1,
   Heading2,
-  Heading3,
   ImagePlus,
   Italic,
   Link2,
@@ -34,22 +43,21 @@ import {
   ListOrdered,
   Languages,
   LogOut,
-  Minus,
   Moon,
-  Pilcrow,
   Pin,
-  Rows3,
   Star,
   Quote,
   Search,
-  Slash,
+  SquareCode,
   SquarePen,
   Strikethrough,
   Table2,
   Trash2,
   Underline as UnderlineIcon,
+  Unlink,
   Focus,
   Sun,
+  X,
 } from 'lucide-react'
 
 import './App.css'
@@ -77,15 +85,6 @@ type Shelf = 'all' | 'pinned' | 'favorites' | 'archived'
 interface Toast {
   id: number
   text: string
-}
-
-interface CommandItem {
-  id: string
-  label: string
-  hint: string
-  keywords: string
-  icon: typeof Pilcrow
-  action: () => void
 }
 
 const defaultDraft: NotePayload = {
@@ -157,6 +156,128 @@ function payloadEqualsNote(payload: NotePayload, note: Note | null) {
   }) === JSON.stringify(noteToPayload(note))
 }
 
+function RemovableImageView({ node, deleteNode, selected }: NodeViewProps) {
+  return (
+    <NodeViewWrapper
+      className={`editor-image${selected ? ' editor-image--selected' : ''}`}
+      data-drag-handle
+    >
+      <img
+        src={node.attrs.src as string}
+        alt={(node.attrs.alt as string | null) ?? ''}
+        title={(node.attrs.title as string | null) ?? undefined}
+        draggable={false}
+      />
+      <button
+        className="editor-image__remove"
+        type="button"
+        aria-label="Remove image"
+        title="Remove image"
+        contentEditable={false}
+        onPointerDown={(event) => event.preventDefault()}
+        onClick={deleteNode}
+      >
+        <X size={16} strokeWidth={2.4} />
+      </button>
+    </NodeViewWrapper>
+  )
+}
+
+const RemovableImage = Image.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(RemovableImageView)
+  },
+})
+
+function copyTextFallback(value: string) {
+  const textarea = document.createElement('textarea')
+  textarea.value = value
+  textarea.style.position = 'fixed'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.select()
+  document.execCommand('copy')
+  textarea.remove()
+}
+
+function GitHubCodeBlockView({ node }: NodeViewProps) {
+  const [copied, setCopied] = useState(false)
+  const currentLocale: Locale = document.documentElement.lang === 'ru' ? 'ru' : 'en'
+  const buttonLabel = translate(currentLocale, copied ? 'copied' : 'copyCode')
+  const codeLabel = translate(currentLocale, 'codeBlock')
+
+  const handleCopy = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard API is unavailable')
+      }
+      await navigator.clipboard.writeText(node.textContent)
+    } catch {
+      copyTextFallback(node.textContent)
+    }
+
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1600)
+  }
+
+  return (
+    <NodeViewWrapper className="github-code-block">
+      <div className="github-code-block__header" contentEditable={false}>
+        <span>{codeLabel}</span>
+        <button
+          className="github-code-block__copy"
+          type="button"
+          aria-label={buttonLabel}
+          title={buttonLabel}
+          onPointerDown={(event) => event.preventDefault()}
+          onClick={() => void handleCopy()}
+        >
+          {copied ? <Check size={15} /> : <Copy size={15} />}
+          <span>{buttonLabel}</span>
+        </button>
+      </div>
+      <NodeViewContent<'code'> as="code" className="github-code-block__content" />
+    </NodeViewWrapper>
+  )
+}
+
+const GitHubCodeBlock = CodeBlock.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(GitHubCodeBlockView)
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      Backspace: () => {
+        const { state, view } = this.editor
+        const { $from, empty, from } = state.selection
+        const selectedNode = (state.selection as { node?: typeof $from.nodeAfter }).node
+        const paragraph = state.schema.nodes.paragraph
+
+        const removeBlockFormattingAt = (position: number) => {
+          view.dispatch(state.tr.setNodeMarkup(position, paragraph).scrollIntoView())
+          this.editor.commands.setTextSelection(position + 1)
+          return true
+        }
+
+        if (selectedNode?.type.name === this.name) {
+          return removeBlockFormattingAt(from)
+        }
+
+        if (empty && $from.nodeAfter?.type.name === this.name) {
+          return removeBlockFormattingAt($from.pos)
+        }
+
+        if (empty && $from.parent.type.name === this.name && $from.parentOffset === 0) {
+          return this.editor.commands.setNode('paragraph')
+        }
+
+        return false
+      },
+    }
+  },
+})
+
 function App() {
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>('booting')
   const [authMode, setAuthMode] = useState<AuthMode>('login')
@@ -187,12 +308,14 @@ function App() {
   const [tagInput, setTagInput] = useState('')
   const [, setUploadBusy] = useState(false)
   const [dragActive, setDragActive] = useState(false)
-  const [commandOpen, setCommandOpen] = useState(false)
-  const [commandQuery, setCommandQuery] = useState('')
   const [toasts, setToasts] = useState<Toast[]>([])
 
   const toastIdRef = useRef(0)
   const autosaveTimerRef = useRef<number | null>(null)
+  const draftRevisionRef = useRef(0)
+  const dirtySinceRef = useRef<number | null>(null)
+  const selectedNoteIdRef = useRef<number | null>(null)
+  const notesRefreshInFlightRef = useRef(false)
   const titleRef = useRef<HTMLInputElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const hydratedNoteIdRef = useRef<number | null>(null)
@@ -204,6 +327,7 @@ function App() {
   )
 
   const selectedNote = notes.find((note) => note.id === selectedNoteId) ?? null
+  selectedNoteIdRef.current = selectedNoteId
   const shelfCounts = useMemo(
     () => ({
       all: notes.filter((note) => !note.is_archived).length,
@@ -286,6 +410,7 @@ function App() {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
+        codeBlock: false,
         heading: {
           levels: [1, 2, 3],
         },
@@ -304,7 +429,8 @@ function App() {
       Highlight,
       TextStyle,
       Color,
-      Image.configure({
+      GitHubCodeBlock,
+      RemovableImage.configure({
         inline: false,
         allowBase64: false,
       }),
@@ -323,15 +449,75 @@ function App() {
       attributes: {
         class: 'notes-editor__content',
       },
+      handleKeyDown: (view, event) => {
+        const { $from, empty } = view.state.selection
+        if (
+          event.key === 'Backspace' &&
+          empty &&
+          $from.parent.type.name === 'paragraph' &&
+          $from.parent.content.size === 0 &&
+          $from.parentOffset === 0
+        ) {
+          const paragraphPosition = $from.before()
+          const nodeBefore = view.state.doc.resolve(paragraphPosition).nodeBefore
+          if (nodeBefore?.type.name === 'codeBlock') {
+            event.preventDefault()
+            view.dispatch(
+              view.state.tr
+                .delete(paragraphPosition, paragraphPosition + $from.parent.nodeSize)
+                .scrollIntoView(),
+            )
+            editor?.commands.setTextSelection(paragraphPosition - 1)
+            return true
+          }
+        }
+
+        if (event.key !== ' ' || !view.state.selection.empty) {
+          return false
+        }
+
+        const linkMark = view.state.schema.marks.link
+        const activeMarks = view.state.storedMarks ?? view.state.selection.$from.marks()
+        if (!linkMark || !linkMark.isInSet(activeMarks)) {
+          return false
+        }
+
+        event.preventDefault()
+        view.dispatch(
+          view.state.tr
+            .removeStoredMark(linkMark)
+            .insertText(' '),
+        )
+        return true
+      },
     },
     onUpdate: ({ editor: instance }) => {
       const html = instance.getHTML()
+      draftRevisionRef.current += 1
       setDraft((current) => ({
         ...current,
         text: html,
         summary: extractSummary(html),
       }))
     },
+  })
+
+  const toolbarState = useEditorState({
+    editor,
+    selector: ({ editor: currentEditor }) => ({
+      bold: currentEditor?.isActive('bold') ?? false,
+      italic: currentEditor?.isActive('italic') ?? false,
+      underline: currentEditor?.isActive('underline') ?? false,
+      strike: currentEditor?.isActive('strike') ?? false,
+      code: currentEditor?.isActive('code') ?? false,
+      codeBlock: currentEditor?.isActive('codeBlock') ?? false,
+      highlight: currentEditor?.isActive('highlight') ?? false,
+      link: currentEditor?.isActive('link') ?? false,
+      bulletList: currentEditor?.isActive('bulletList') ?? false,
+      orderedList: currentEditor?.isActive('orderedList') ?? false,
+      taskList: currentEditor?.isActive('taskList') ?? false,
+      table: currentEditor?.isActive('table') ?? false,
+    }),
   })
 
   useEffect(() => {
@@ -344,124 +530,10 @@ function App() {
   const wordCount = plainText ? plainText.split(/\s+/).length : 0
   const readingTime = estimateReadingTime(wordCount)
 
-  const commandItems = useMemo<CommandItem[]>(() => {
-    if (!editor) {
-      return []
-    }
-
-    return [
-      {
-        id: 'paragraph',
-        label: t('bodyText'),
-        hint: t('defaultParagraph'),
-        keywords: 'paragraph body text normal',
-        icon: Pilcrow,
-        action: () => editor.chain().focus().setParagraph().run(),
-      },
-      {
-        id: 'title',
-        label: t('largeHeading'),
-        hint: t('primaryTitle'),
-        keywords: 'heading h1 title big',
-        icon: Heading1,
-        action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
-      },
-      {
-        id: 'section',
-        label: t('sectionHeading'),
-        hint: t('secondaryHeading'),
-        keywords: 'heading h2 section subtitle',
-        icon: Heading2,
-        action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
-      },
-      {
-        id: 'subsection',
-        label: t('subsection'),
-        hint: t('compactHeading'),
-        keywords: 'heading h3 subsection',
-        icon: Heading3,
-        action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
-      },
-      {
-        id: 'quote',
-        label: t('quote'),
-        hint: t('emphasizedQuote'),
-        keywords: 'quote citation blockquote',
-        icon: Quote,
-        action: () => editor.chain().focus().toggleBlockquote().run(),
-      },
-      {
-        id: 'bullets',
-        label: t('bulletList'),
-        hint: t('unorderedList'),
-        keywords: 'list bullets unordered',
-        icon: List,
-        action: () => editor.chain().focus().toggleBulletList().run(),
-      },
-      {
-        id: 'numbered',
-        label: t('numberedList'),
-        hint: t('orderedSequence'),
-        keywords: 'list ordered numbered',
-        icon: ListOrdered,
-        action: () => editor.chain().focus().toggleOrderedList().run(),
-      },
-      {
-        id: 'checklist',
-        label: t('checklist'),
-        hint: t('taskList'),
-        keywords: 'task checklist todos',
-        icon: CheckSquare,
-        action: () => editor.chain().focus().toggleTaskList().run(),
-      },
-      {
-        id: 'code',
-        label: t('codeBlock'),
-        hint: t('preformattedBlock'),
-        keywords: 'code snippet block',
-        icon: Code2,
-        action: () => editor.chain().focus().toggleCodeBlock().run(),
-      },
-      {
-        id: 'divider',
-        label: t('divider'),
-        hint: t('sectionBreak'),
-        keywords: 'divider separator line rule',
-        icon: Minus,
-        action: () => editor.chain().focus().insertContent('<hr /><p></p>').run(),
-      },
-      {
-        id: 'table',
-        label: t('table'),
-        hint: t('grid'),
-        keywords: 'table grid columns rows',
-        icon: Table2,
-        action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
-      },
-      {
-        id: 'image',
-        label: t('image'),
-        hint: t('uploadDevice'),
-        keywords: 'image media upload picture photo',
-        icon: ImagePlus,
-        action: () => fileInputRef.current?.click(),
-      },
-    ]
-  }, [editor, t])
-
-  const filteredCommands = useMemo(() => {
-    const query = commandQuery.trim().toLowerCase()
-    if (!query) {
-      return commandItems
-    }
-
-    return commandItems.filter((item) =>
-      `${item.label} ${item.hint} ${item.keywords}`.toLowerCase().includes(query),
-    )
-  }, [commandItems, commandQuery])
-
   const syncDraft = useCallback((nextNote: Note | null) => {
     const payload = nextNote ? noteToPayload(nextNote) : defaultDraft
+    draftRevisionRef.current += 1
+    dirtySinceRef.current = null
     setDraft(payload)
     setTagInput(payload.tags.join(', '))
     setSaveState('idle')
@@ -472,8 +544,15 @@ function App() {
     }
   }, [editor])
 
-  const loadNotes = useCallback(async (preferredId?: number | null) => {
-    setNotesBusy(true)
+  const loadNotes = useCallback(async (preferredId?: number | null, silent = false) => {
+    if (notesRefreshInFlightRef.current) {
+      return
+    }
+
+    notesRefreshInFlightRef.current = true
+    if (!silent) {
+      setNotesBusy(true)
+    }
 
     try {
       const nextNotes = sortNotes(await getNotes())
@@ -486,9 +565,14 @@ function App() {
         return nextNotes[0]?.id ?? null
       })
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : 'Failed to load notes.')
+      if (!silent) {
+        setNotice(error instanceof Error ? error.message : 'Failed to load notes.')
+      }
     } finally {
-      setNotesBusy(false)
+      notesRefreshInFlightRef.current = false
+      if (!silent) {
+        setNotesBusy(false)
+      }
     }
   }, [])
 
@@ -498,16 +582,38 @@ function App() {
         const user = await getCurrentUser()
         setDarkMode(user.theme === 'dark')
         setSessionStatus('authenticated')
-        setNotice(`Welcome back, ${user.login}.`)
+        setNotice(t('welcomeBack', { login: user.login }))
         await loadNotes()
       } catch {
         setNotes([])
         setSelectedNoteId(null)
         setSessionStatus('anonymous')
-        setNotice('Sign in to open your notes workspace.')
+        setNotice(t('signInPrompt'))
       }
     })()
-  }, [loadNotes])
+  }, [loadNotes, t])
+
+  useEffect(() => {
+    if (sessionStatus !== 'authenticated') {
+      return
+    }
+
+    const refreshNotes = () => {
+      if (document.visibilityState === 'visible') {
+        void loadNotes(undefined, true)
+      }
+    }
+    const intervalId = window.setInterval(refreshNotes, 10_000)
+
+    window.addEventListener('focus', refreshNotes)
+    document.addEventListener('visibilitychange', refreshNotes)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', refreshNotes)
+      document.removeEventListener('visibilitychange', refreshNotes)
+    }
+  }, [loadNotes, sessionStatus])
 
   useEffect(() => {
     if (!editor) {
@@ -533,79 +639,133 @@ function App() {
 
   const persistCurrentNote = useCallback(async (successNotice?: string, silent = false) => {
     if (!selectedNoteId || !selectedNote) {
-      return
+      return false
     }
 
+    const noteIdAtStart = selectedNoteId
+    const revisionAtStart = draftRevisionRef.current
     setSaveState('saving')
 
     try {
       const payload = {
         ...draft,
-        title: draft.title.trim() || 'Untitled note',
+        title: draft.title.trim() || t('untitledNote'),
         text: draft.text || '<p></p>',
         summary: extractSummary(draft.text || ''),
       }
 
-      const updated = await updateNote(selectedNoteId, payload)
+      const updated = await updateNote(noteIdAtStart, payload)
       setNotes((current) =>
         sortNotes(current.map((note) => (note.id === updated.id ? updated : note))),
       )
-      setDraft(noteToPayload(updated))
-      setTagInput(updated.tags.join(', '))
-      setSaveState('saved')
-      setNotice(successNotice ?? 'Note saved.')
-      if (!silent) {
-        pushToast(successNotice ?? 'Saved')
+
+      const noNewerChanges = draftRevisionRef.current === revisionAtStart
+      const sameNoteIsOpen = selectedNoteIdRef.current === noteIdAtStart
+      if (noNewerChanges && sameNoteIsOpen) {
+        dirtySinceRef.current = null
+        setDraft(noteToPayload(updated))
+        setTagInput(updated.tags.join(', '))
+        setSaveState('saved')
+        setNotice(successNotice ?? t('saved'))
+        if (!silent) {
+          pushToast(successNotice ?? t('saved'))
+        }
+      } else if (sameNoteIsOpen) {
+        setSaveState('dirty')
       }
+      return noNewerChanges
     } catch (error) {
       setSaveState('dirty')
       setNotice(error instanceof Error ? error.message : 'Failed to save note.')
       if (!silent) {
-        pushToast('Save failed')
+        pushToast(t('saveFailed'))
       }
+      return false
     }
-  }, [draft, pushToast, selectedNote, selectedNoteId])
+  }, [draft, pushToast, selectedNote, selectedNoteId, t])
 
   useEffect(() => {
     if (!selectedNote || !dirty) {
-      if (saveState !== 'saving') {
-        setSaveState(selectedNote ? 'saved' : 'idle')
-      }
+      dirtySinceRef.current = null
+      setSaveState((current) => current === 'saving' ? current : selectedNote ? 'saved' : 'idle')
       return
     }
 
     setSaveState('dirty')
+    dirtySinceRef.current ??= Date.now()
     if (autosaveTimerRef.current) {
       window.clearTimeout(autosaveTimerRef.current)
     }
 
+    const maxWaitRemaining = Math.max(0, 3_000 - (Date.now() - dirtySinceRef.current))
+    const delay = Math.min(700, maxWaitRemaining)
     autosaveTimerRef.current = window.setTimeout(() => {
-      void persistCurrentNote('Autosaved.', true)
-    }, 900)
+      void persistCurrentNote(t('autosaved'), true)
+    }, delay)
 
     return () => {
       if (autosaveTimerRef.current) {
         window.clearTimeout(autosaveTimerRef.current)
       }
     }
-  }, [dirty, persistCurrentNote, saveState, selectedNote])
+  }, [dirty, persistCurrentNote, selectedNote, t])
+
+  useEffect(() => {
+    if (!selectedNote || !dirty) {
+      return
+    }
+
+    const flushPendingChanges = () => {
+      if (autosaveTimerRef.current) {
+        window.clearTimeout(autosaveTimerRef.current)
+      }
+      void persistCurrentNote(t('autosaved'), true)
+    }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingChanges()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pagehide', flushPendingChanges)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pagehide', flushPendingChanges)
+    }
+  }, [dirty, persistCurrentNote, selectedNote, t])
+
+  const handleSelectNote = useCallback(async (nextNoteId: number) => {
+    if (nextNoteId === selectedNoteId) {
+      return
+    }
+
+    if (dirty) {
+      const saved = await persistCurrentNote(t('autosaved'), true)
+      if (!saved) {
+        return
+      }
+    }
+
+    setSelectedNoteId(nextNoteId)
+  }, [dirty, persistCurrentNote, selectedNoteId, t])
 
   const handleCreateNote = useCallback(async () => {
     try {
       const note = await createNote({
         ...defaultDraft,
-        title: `Untitled note ${notes.length + 1}`,
+        title: `${t('untitledNote')} ${notes.length + 1}`,
       })
 
       setNotes((current) => sortNotes([note, ...current.filter((item) => item.id !== note.id)]))
       setSelectedNoteId(note.id)
-      setNotice('New note created.')
-      pushToast('New note')
+      setNotice(t('newNoteCreated'))
+      pushToast(t('newNoteToast'))
       window.setTimeout(() => titleRef.current?.focus(), 60)
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Failed to create note.')
     }
-  }, [notes.length, pushToast])
+  }, [notes.length, pushToast, t])
 
   const handleDuplicateNote = useCallback(async () => {
     if (!selectedNote) {
@@ -615,23 +775,23 @@ function App() {
     try {
       const duplicate = await createNote({
         ...noteToPayload(selectedNote),
-        title: `${selectedNote.title} copy`,
+        title: `${selectedNote.title} ${t('copySuffix')}`,
       })
       setNotes((current) => sortNotes([duplicate, ...current]))
       setSelectedNoteId(duplicate.id)
-      setNotice('Note duplicated.')
-      pushToast('Duplicated')
+      setNotice(t('noteDuplicated'))
+      pushToast(t('duplicated'))
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Failed to duplicate note.')
     }
-  }, [pushToast, selectedNote])
+  }, [pushToast, selectedNote, t])
 
   const handleDeleteNote = useCallback(async () => {
     if (!selectedNoteId || !selectedNote) {
       return
     }
 
-    if (!window.confirm(`Delete "${selectedNote.title}"?`)) {
+    if (!window.confirm(t('deleteConfirm', { title: selectedNote.title }))) {
       return
     }
 
@@ -641,14 +801,14 @@ function App() {
       const remaining = notes.filter((note) => note.id !== selectedNoteId)
       setNotes(remaining)
       setSelectedNoteId(remaining[0]?.id ?? null)
-      setNotice('Note deleted.')
-      pushToast('Deleted')
+      setNotice(t('noteDeleted'))
+      pushToast(t('deleted'))
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Failed to delete note.')
     } finally {
       setDeleteBusy(false)
     }
-  }, [notes, pushToast, selectedNote, selectedNoteId])
+  }, [notes, pushToast, selectedNote, selectedNoteId, t])
 
   const handleExportNote = useCallback(() => {
     if (!selectedNote) {
@@ -685,10 +845,11 @@ function App() {
     link.download = `${(draft.title || 'untitled-note').replace(/\s+/g, '-').toLowerCase()}.html`
     link.click()
     URL.revokeObjectURL(url)
-    pushToast('Exported')
-  }, [draft, pushToast, selectedNote])
+    pushToast(t('exported'))
+  }, [draft, pushToast, selectedNote, t])
 
   const updateDraftFlag = useCallback((key: 'is_pinned' | 'is_favorite' | 'is_archived') => {
+    draftRevisionRef.current += 1
     setDraft((current) => ({ ...current, [key]: !current[key] }))
   }, [])
 
@@ -698,15 +859,9 @@ function App() {
       .map((tag) => tag.trim())
       .filter(Boolean)
 
+    draftRevisionRef.current += 1
     setTagInput(value)
     setDraft((current) => ({ ...current, tags: nextTags }))
-  }, [])
-
-  const handleCommandSelect = useCallback((command: CommandItem) => {
-    command.action()
-    setCommandOpen(false)
-    setCommandQuery('')
-    setToolbarOpen(false)
   }, [])
 
   const uploadImageFile = useCallback(async (file: File) => {
@@ -718,15 +873,15 @@ function App() {
     try {
       const result = await uploadAttachment(file)
       editor.chain().focus().setImage({ src: result.url, alt: file.name }).run()
-      setNotice('Image inserted into note.')
-      pushToast('Image added')
+      setNotice(t('imageInserted'))
+      pushToast(t('imageAdded'))
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Failed to upload image.')
-      pushToast('Upload failed')
+      pushToast(t('uploadFailed'))
     } finally {
       setUploadBusy(false)
     }
-  }, [editor, pushToast, selectedNoteId])
+  }, [editor, pushToast, selectedNoteId, t])
 
   async function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -742,7 +897,7 @@ function App() {
       setDarkMode(user.theme === 'dark')
       setSessionStatus('authenticated')
       setAuthForm({ login: '', password: '' })
-      setNotice(authMode === 'register' ? `Account created for ${user.login}.` : `Signed in as ${user.login}.`)
+      setNotice(authMode === 'register' ? t('accountCreated', { login: user.login }) : t('signedInAs', { login: user.login }))
       await loadNotes()
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Authentication failed.')
@@ -761,7 +916,7 @@ function App() {
       setDraft(defaultDraft)
       setSessionStatus('anonymous')
       setAuthBusy(false)
-      setNotice('Signed out.')
+      setNotice(t('signedOut'))
     }
   }
 
@@ -780,13 +935,115 @@ function App() {
     }
   }
 
+  function handleSetLink() {
+    if (!editor) {
+      return
+    }
+
+    const currentUrl = editor.getAttributes('link').href as string | undefined
+    const url = window.prompt(t('enterLink'), currentUrl ?? 'https://')
+    if (url === null) {
+      return
+    }
+
+    const normalizedUrl = url.trim()
+    if (!normalizedUrl) {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+      return
+    }
+
+    editor.chain().focus().extendMarkRange('link').setLink({ href: normalizedUrl }).run()
+  }
+
+  function handleUnsetLink() {
+    editor?.chain().focus().extendMarkRange('link').unsetLink().run()
+  }
+
+  function handleCodeBlock() {
+    if (!editor) {
+      return
+    }
+
+    const { from, to, empty, $from, $to } = editor.state.selection
+    if (
+      editor.isActive('codeBlock') &&
+      !empty &&
+      $from.sameParent($to) &&
+      $from.parent.type.name === 'codeBlock'
+    ) {
+      const codeBlockType = editor.state.schema.nodes.codeBlock
+      const paragraphType = editor.state.schema.nodes.paragraph
+      const fullText = $from.parent.textContent
+      const beforeText = fullText.slice(0, $from.parentOffset).replace(/\n$/, '')
+      const selectedText = fullText.slice($from.parentOffset, $to.parentOffset)
+      const afterText = fullText.slice($to.parentOffset).replace(/^\n/, '')
+      const beforeNode = beforeText
+        ? codeBlockType.create(null, editor.state.schema.text(beforeText))
+        : null
+      const paragraphNode = paragraphType.create(
+        null,
+        selectedText ? editor.state.schema.text(selectedText) : undefined,
+      )
+      const afterNode = afterText
+        ? codeBlockType.create(null, editor.state.schema.text(afterText))
+        : null
+      const replacement = [beforeNode, paragraphNode, afterNode].filter(
+        (node): node is NonNullable<typeof node> => node !== null,
+      )
+      const blockPosition = $from.before()
+      const paragraphPosition = blockPosition + (beforeNode?.nodeSize ?? 0)
+
+      editor.view.dispatch(
+        editor.state.tr
+          .replaceWith(blockPosition, blockPosition + $from.parent.nodeSize, replacement)
+          .scrollIntoView(),
+      )
+      editor.commands.setTextSelection({
+        from: paragraphPosition + 1,
+        to: paragraphPosition + 1 + selectedText.length,
+      })
+      editor.commands.focus()
+      return
+    }
+
+    if (editor.isActive('codeBlock')) {
+      editor.chain().focus().toggleCodeBlock().run()
+      return
+    }
+
+    if (empty) {
+      editor.chain().focus().toggleCodeBlock().run()
+      return
+    }
+
+    const selectedText = editor.state.doc.textBetween(from, to, '\n')
+    const codeBlock = editor.state.schema.nodes.codeBlock.create(
+      null,
+      selectedText ? editor.state.schema.text(selectedText) : undefined,
+    )
+    editor.view.dispatch(
+      editor.state.tr.replaceRangeWith(from, to, codeBlock).scrollIntoView(),
+    )
+    editor.commands.focus()
+  }
+
+  function handleEditorAreaPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement
+    if (target.closest('.notes-editor__content')) {
+      return
+    }
+
+    event.preventDefault()
+    editor?.chain().focus('end').run()
+  }
+
   useEffect(() => {
     function onKeyDown(event: globalThis.KeyboardEvent) {
       const meta = event.metaKey || event.ctrlKey
 
       if (meta && event.key.toLowerCase() === 's') {
         event.preventDefault()
-        void persistCurrentNote('Saved manually.')
+        void persistCurrentNote(t('savedManually'))
       }
 
       if (meta && event.key.toLowerCase() === 'n') {
@@ -794,27 +1051,11 @@ function App() {
         void handleCreateNote()
       }
 
-      if (meta && event.key.toLowerCase() === 'k') {
-        event.preventDefault()
-        setCommandOpen(true)
-      }
-
-      if (event.key === '/' && editor?.isFocused) {
-        const currentBlockText = editor.state.selection.$from.parent.textContent.trim()
-        if (!currentBlockText) {
-          event.preventDefault()
-          setCommandOpen(true)
-        }
-      }
-
-      if (event.key === 'Escape') {
-        setCommandOpen(false)
-      }
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [editor, handleCreateNote, persistCurrentNote])
+  }, [handleCreateNote, persistCurrentNote, t])
 
   if (sessionStatus === 'booting') {
     return (
@@ -919,7 +1160,7 @@ function App() {
               key={note.id}
               className={`note-row${note.id === selectedNoteId ? ' note-row--active' : ''}`}
               type="button"
-              onClick={() => setSelectedNoteId(note.id)}
+              onClick={() => void handleSelectNote(note.id)}
             >
               <strong>{note.title}</strong>
               <span>{note.summary || htmlToPlainText(note.text ?? '') || t('emptyNote')}</span>
@@ -936,66 +1177,103 @@ function App() {
           <div className="notes-toolbar__center">
             <div className="toolbar-pill">
               <button
-                className={`toolbar-pill__button${editor?.isActive('bold') ? ' is-active' : ''}`}
+                className={`toolbar-pill__button${toolbarState?.bold ? ' is-active' : ''}`}
                 type="button"
                 onClick={() => editor?.chain().focus().toggleBold().run()}
               >
                 <Bold size={16} />
               </button>
               <button
-                className={`toolbar-pill__button${editor?.isActive('italic') ? ' is-active' : ''}`}
+                className={`toolbar-pill__button${toolbarState?.italic ? ' is-active' : ''}`}
                 type="button"
                 onClick={() => editor?.chain().focus().toggleItalic().run()}
               >
                 <Italic size={16} />
               </button>
               <button
-                className={`toolbar-pill__button${editor?.isActive('underline') ? ' is-active' : ''}`}
+                className={`toolbar-pill__button${toolbarState?.underline ? ' is-active' : ''}`}
                 type="button"
                 onClick={() => editor?.chain().focus().toggleUnderline().run()}
               >
                 <UnderlineIcon size={16} />
               </button>
               <button
-                className={`toolbar-pill__button${editor?.isActive('strike') ? ' is-active' : ''}`}
+                className={`toolbar-pill__button${toolbarState?.strike ? ' is-active' : ''}`}
                 type="button"
                 onClick={() => editor?.chain().focus().toggleStrike().run()}
               >
                 <Strikethrough size={16} />
               </button>
               <button
-                className={`toolbar-pill__button${editor?.isActive('highlight') ? ' is-active' : ''}`}
+                className={`toolbar-pill__button${toolbarState?.code ? ' is-active' : ''}`}
+                type="button"
+                title={t('inlineCode')}
+                aria-label={t('inlineCode')}
+                onClick={() => editor?.chain().focus().toggleCode().run()}
+              >
+                <Code2 size={16} />
+              </button>
+              <button
+                className={`toolbar-pill__button${toolbarState?.codeBlock ? ' is-active' : ''}`}
+                type="button"
+                title={t('codeBlock')}
+                aria-label={t('codeBlock')}
+                onClick={handleCodeBlock}
+              >
+                <SquareCode size={16} />
+              </button>
+              <button
+                className={`toolbar-pill__button${toolbarState?.highlight ? ' is-active' : ''}`}
                 type="button"
                 onClick={() => editor?.chain().focus().toggleHighlight().run()}
               >
                 <Highlighter size={16} />
               </button>
+              <button
+                className={`toolbar-pill__button${toolbarState?.link ? ' is-active' : ''}`}
+                type="button"
+                title={t('createLink')}
+                aria-label={t('createLink')}
+                onClick={handleSetLink}
+              >
+                <Link2 size={16} />
+              </button>
+              <button
+                className="toolbar-pill__button"
+                disabled={!toolbarState?.link}
+                type="button"
+                title={t('removeLink')}
+                aria-label={t('removeLink')}
+                onClick={handleUnsetLink}
+              >
+                <Unlink size={16} />
+              </button>
               <button className="toolbar-pill__button" type="button" onClick={() => setToolbarOpen((current) => !current)}>
                 Aa
               </button>
               <button
-                className={`toolbar-pill__button${editor?.isActive('bulletList') ? ' is-active' : ''}`}
+                className={`toolbar-pill__button${toolbarState?.bulletList ? ' is-active' : ''}`}
                 type="button"
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
               >
                 <List size={16} />
               </button>
               <button
-                className={`toolbar-pill__button${editor?.isActive('orderedList') ? ' is-active' : ''}`}
+                className={`toolbar-pill__button${toolbarState?.orderedList ? ' is-active' : ''}`}
                 type="button"
                 onClick={() => editor?.chain().focus().toggleOrderedList().run()}
               >
                 <ListOrdered size={16} />
               </button>
               <button
-                className={`toolbar-pill__button${editor?.isActive('taskList') ? ' is-active' : ''}`}
+                className={`toolbar-pill__button${toolbarState?.taskList ? ' is-active' : ''}`}
                 type="button"
                 onClick={() => editor?.chain().focus().toggleTaskList().run()}
               >
                 <CheckSquare size={16} />
               </button>
               <button
-                className={`toolbar-pill__button${editor?.isActive('table') ? ' is-active' : ''}`}
+                className={`toolbar-pill__button${toolbarState?.table ? ' is-active' : ''}`}
                 type="button"
                 onClick={() =>
                   editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
@@ -1025,31 +1303,6 @@ function App() {
                 <button type="button" onClick={() => editor?.chain().focus().toggleBlockquote().run()}>
                   <Quote size={16} />
                   <span>{t('blockQuote')}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const url = window.prompt(t('enterLink'))
-                    if (url) {
-                      editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-                    }
-                  }}
-                >
-                  <Link2 size={16} />
-                  <span>{t('link')}</span>
-                </button>
-                <button type="button" onClick={() => editor?.chain().focus().toggleTaskList().run()}>
-                  <CheckSquare size={16} />
-                  <span>{t('checklist')}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-                  }
-                >
-                  <Rows3 size={16} />
-                  <span>{t('table')}</span>
                 </button>
                 <button type="button" onClick={() => editor?.chain().focus().setColor('#caa8ff').run()}>
                   <span className="format-popover__swatch format-popover__swatch--purple" />
@@ -1101,9 +1354,6 @@ function App() {
             </button>
             <button className="icon-button" type="button" onClick={() => setSearchQuery('')}>
               <Search size={16} />
-            </button>
-            <button className="icon-button" type="button" onClick={() => setCommandOpen(true)}>
-              <Slash size={16} />
             </button>
             <input
               className="toolbar-tags"
@@ -1162,7 +1412,7 @@ function App() {
             <span>{saveState === 'saving' ? t('saving') : saveState === 'dirty' ? t('unsaved') : notice}</span>
             {selectedNote ? (
               <span>
-                {draft.is_pinned ? t('pinned') : draft.is_favorite ? t('favorite') : draft.is_archived ? t('archived') : t('draft')}
+                {draft.is_pinned ? t('pinned') : draft.is_favorite ? t('favorite') : draft.is_archived ? t('archived') : t('saved')}
               </span>
             ) : null}
           </div>
@@ -1214,9 +1464,10 @@ function App() {
                 placeholder={t('title')}
                 type="text"
                 value={draft.title}
-                onChange={(event) =>
+                onChange={(event) => {
+                  draftRevisionRef.current += 1
                   setDraft((current) => ({ ...current, title: event.target.value }))
-                }
+                }}
               />
 
               {draft.tags.length ? (
@@ -1228,6 +1479,7 @@ function App() {
                       type="button"
                       onClick={() => {
                         const nextTags = draft.tags.filter((item) => item !== tag)
+                        draftRevisionRef.current += 1
                         setTagInput(nextTags.join(', '))
                         setDraft((current) => ({ ...current, tags: nextTags }))
                       }}
@@ -1238,7 +1490,7 @@ function App() {
                 </div>
               ) : null}
 
-              <div className="notes-editor">
+              <div className="notes-editor" onPointerDown={handleEditorAreaPointerDown}>
                 <EditorContent editor={editor} />
               </div>
 
@@ -1254,7 +1506,7 @@ function App() {
                     <Copy size={14} />
                     <span>{t('duplicate')}</span>
                   </button>
-                  <button className="ghost-button" type="button" onClick={() => void persistCurrentNote('Saved manually.')}>
+                  <button className="ghost-button" type="button" onClick={() => void persistCurrentNote(t('savedManually'))}>
                     {t('save')}
                   </button>
                   <button className="ghost-button ghost-button--danger" disabled={deleteBusy} type="button" onClick={() => void handleDeleteNote()}>
@@ -1292,48 +1544,6 @@ function App() {
         ))}
       </div>
 
-      {commandOpen ? (
-        <div className="command-overlay" role="presentation" onClick={() => setCommandOpen(false)}>
-          <div className="command-panel" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
-            <div className="command-panel__head">
-              <Slash size={16} />
-              <input
-                autoFocus
-                className="command-panel__input"
-                placeholder={t('searchCommands')}
-                type="text"
-                value={commandQuery}
-                onChange={(event) => setCommandQuery(event.target.value)}
-              />
-            </div>
-
-            <div className="command-panel__list">
-              {filteredCommands.map((command) => {
-                const Icon = command.icon
-                return (
-                  <button
-                    key={command.id}
-                    className="command-item"
-                    type="button"
-                    onClick={() => handleCommandSelect(command)}
-                  >
-                    <span className="command-item__icon">
-                      <Icon size={16} />
-                    </span>
-                    <span className="command-item__copy">
-                      <strong>{command.label}</strong>
-                      <small>{command.hint}</small>
-                    </span>
-                  </button>
-                )
-              })}
-              {!filteredCommands.length ? (
-                <p className="command-empty">{t('noCommands')}</p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </main>
   )
 }

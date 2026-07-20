@@ -6,6 +6,32 @@
   color: #f4f4f2;
 }
 
+::selection {
+  background: rgba(255, 255, 255, 0.24);
+  color: inherit;
+  text-shadow: none;
+}
+
+.notes-editor__content::selection,
+.notes-editor__content *::selection,
+.notes-title::selection,
+.toolbar-search::selection,
+.toolbar-tags::selection,
+.auth-form input::selection {
+  background-color: rgba(255, 255, 255, 0.24);
+  color: inherit;
+  text-shadow: none;
+}
+
+.notes-app:not(.notes-app--dark) .notes-editor__content::selection,
+.notes-app:not(.notes-app--dark) .notes-editor__content *::selection,
+.notes-app:not(.notes-app--dark) .notes-title::selection,
+.notes-app:not(.notes-app--dark) .toolbar-search::selection,
+.notes-app:not(.notes-app--dark) .toolbar-tags::selection {
+  background-color: rgba(44, 44, 46, 0.2);
+  color: inherit;
+}
+
 .app-shell--loading {
   display: grid;
   place-items: center;
@@ -219,8 +245,8 @@
 }
 
 .icon-button--active {
-  background: #e7e7eb;
-  color: #c98b00;
+  background: #2c2c2e;
+  color: #ffffff;
 }
 
 .notes-list--dark {
@@ -288,23 +314,28 @@
 }
 
 .note-row--active {
-  background: #ffd85a;
-  color: #2c2100;
+  background: #2c2c2e;
+  color: #ffffff;
 }
 
 .note-row--active span {
-  color: #5c4400;
+  color: #d1d1d6;
 }
 
 .notes-workspace {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   max-width: 100%;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   padding: 0;
   background: #ffffff;
 }
 
 .notes-toolbar {
+  flex: 0 0 auto;
   justify-content: space-between;
   gap: 20px;
   position: sticky;
@@ -358,6 +389,12 @@
   padding: 0 10px;
 }
 
+.toolbar-pill__button:disabled,
+.format-popover button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
 .notes-toolbar .icon-button {
   border-radius: 999px;
 }
@@ -404,11 +441,11 @@
 }
 
 .toolbar-signout {
-  border: 1px solid #f0c944;
+  border: 1px solid #2c2c2e;
   border-radius: 999px;
   padding: 11px 16px;
-  background: #ffd85a;
-  color: #2c2100;
+  background: #2c2c2e;
+  color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -421,7 +458,7 @@
 }
 
 .toolbar-signout:hover {
-  background: #ffdf70;
+  background: #48484a;
 }
 
 .toolbar-signout:disabled {
@@ -498,11 +535,16 @@
 }
 
 .notes-stage {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
   width: 100%;
   margin: 0;
 }
 
 .notes-stage__meta {
+  flex: 0 0 auto;
   justify-content: center;
   gap: 28px;
   font-size: 0.9rem;
@@ -519,10 +561,11 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  height: calc(100dvh - 86px);
+  flex: 1 1 auto;
+  height: auto;
   min-height: 0;
   overflow: hidden;
-  padding: 28px clamp(28px, 5vw, 80px) 14px;
+  padding: 28px clamp(28px, 5vw, 80px) 24px;
   box-sizing: border-box;
   border-radius: 0;
   background: #ffffff;
@@ -561,13 +604,16 @@
 
 .notes-title {
   width: 100%;
+  min-height: 2.75rem;
+  flex: 0 0 auto;
   border: 0;
   background: transparent;
   color: #1d1d1f;
   font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 18px;
-  padding: 0;
+  line-height: 1.25;
+  margin-bottom: 14px;
+  padding: 3px 0 5px;
   font-family: inherit;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -602,123 +648,30 @@
   background: #e9e9ed;
 }
 
-.command-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(7, 7, 8, 0.58);
-  backdrop-filter: blur(18px);
-  display: grid;
-  place-items: start center;
-  padding: 84px 20px 20px;
-  z-index: 40;
-}
-
-.command-panel {
-  width: min(640px, 100%);
-  border-radius: 24px;
-  background: rgba(24, 24, 25, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 36px 120px rgba(0, 0, 0, 0.38);
-  overflow: hidden;
-}
-
-.command-panel__head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  color: #e5e5df;
-}
-
-.command-panel__input {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: #f2f2ee;
-  font: inherit;
-  font-size: 1rem;
-}
-
-.command-panel__input:focus {
-  outline: none;
-}
-
-.command-panel__list {
-  display: grid;
-  gap: 2px;
-  padding: 10px;
-  max-height: min(65vh, 520px);
-  overflow: auto;
-}
-
-.command-item {
-  border: 0;
-  border-radius: 16px;
-  background: transparent;
-  color: #f2f2ee;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.command-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.command-item__icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.06);
-  color: #e7e7e1;
-  flex: 0 0 auto;
-}
-
-.command-item__copy {
-  display: grid;
-  gap: 2px;
-}
-
-.command-item__copy strong {
-  font-weight: 600;
-}
-
-.command-item__copy small,
-.command-empty {
-  color: #9f9f98;
-}
-
-.command-empty {
-  margin: 0;
-  padding: 18px 12px 14px;
-}
-
 .notes-editor {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
   scrollbar-gutter: stable;
+  cursor: text;
+}
+
+.notes-editor > div {
+  min-height: 100%;
 }
 
 .notes-editor__content {
   min-height: 100%;
   color: #2c2c2e;
-  line-height: 1.7;
+  line-height: 1.55;
   font-size: 1.02rem;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
 .notes-editor__content p {
-  margin: 0 0 12px;
+  margin: 0;
 }
 
 .notes-editor__content hr {
@@ -772,21 +725,77 @@
 .notes-editor__content blockquote {
   margin: 0 0 12px;
   padding-left: 16px;
-  border-left: 3px solid #f0b429;
+  border-left: 3px solid #2c2c2e;
   color: #636366;
 }
 
 .notes-editor__content a {
-  color: #007aff;
+  color: #2c2c2e;
+  text-decoration-color: #636366;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
   overflow-wrap: anywhere;
 }
 
-.notes-editor__content img {
+.editor-image {
+  position: relative;
+  display: table;
   max-width: min(520px, 100%);
+  margin: 14px 0;
+  border-radius: 18px;
+}
+
+.editor-image img {
+  max-width: min(520px, 100%);
+  width: auto;
   height: auto;
   border-radius: 18px;
   display: block;
-  margin: 14px 0;
+  margin: 0;
+}
+
+.editor-image__remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(28, 28, 30, 0.78);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.88);
+  transition: opacity 140ms ease, transform 140ms ease, background 140ms ease;
+}
+
+.editor-image:hover .editor-image__remove,
+.editor-image--selected .editor-image__remove,
+.editor-image__remove:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.editor-image__remove:hover {
+  background: #d83b36;
+}
+
+.editor-image--selected {
+  outline: 3px solid #2c2c2e;
+  outline-offset: 3px;
+}
+
+@media (hover: none) {
+  .editor-image__remove {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .notes-editor__content code {
@@ -800,6 +809,71 @@
   border-radius: 14px;
   background: #0f0f10;
   overflow: auto;
+}
+
+.github-code-block {
+  margin: 16px 0;
+  overflow: hidden;
+  border: 1px solid #d1d1d6;
+  border-radius: 12px;
+  background: #f7f7f8;
+  color: #1d1d1f;
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
+}
+
+.github-code-block__header {
+  min-height: 42px;
+  padding: 7px 8px 7px 16px;
+  border-bottom: 1px solid #d1d1d6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #ededf0;
+  color: #636366;
+  font-size: 0.78rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  user-select: none;
+}
+
+.github-code-block__copy {
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid #c7c7cc;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  color: #2c2c2e;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.github-code-block__copy:hover {
+  background: #e5e5ea;
+  border-color: #aeaeb2;
+}
+
+.notes-editor__content .github-code-block__content {
+  display: block;
+  min-height: 48px;
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  border-radius: 0 0 11px 11px;
+  background: #f7f7f8;
+  color: #1d1d1f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.notes-editor__content .github-code-block__content::selection {
+  background: rgba(255, 255, 255, 0.24);
+  color: inherit;
 }
 
 .notes-editor__content table {
@@ -859,9 +933,9 @@
 }
 
 .ghost-button--bright {
-  color: #5c4400;
-  background: #ffd85a;
-  border-color: #f0c944;
+  color: #ffffff;
+  background: #2c2c2e;
+  border-color: #2c2c2e;
 }
 
 .notes-app--dark {
@@ -887,12 +961,12 @@
 }
 
 .notes-app--dark .note-row--active {
-  background: #ffd85a;
-  color: #2c2100;
+  background: #f2f2f7;
+  color: #1c1c1e;
 }
 
 .notes-app--dark .note-row--active span {
-  color: #5c4400;
+  color: #636366;
 }
 
 .notes-app--dark .notes-workspace,
@@ -916,10 +990,14 @@
 }
 
 .notes-app--dark .icon-button:hover,
-.notes-app--dark .icon-button--active,
-.notes-app--dark .toolbar-pill__button:hover,
-.notes-app--dark .toolbar-pill__button.is-active {
+.notes-app--dark .toolbar-pill__button:hover {
   background: #48484a;
+}
+
+.notes-app--dark .icon-button--active,
+.notes-app--dark .toolbar-pill__button.is-active {
+  background: #f2f2f7;
+  color: #1c1c1e;
 }
 
 .notes-app--dark .toolbar-pill {
@@ -953,11 +1031,59 @@
 
 .notes-app--dark .notes-editor__content blockquote {
   color: #c7c7cc;
+  border-left-color: #f2f2f7;
+}
+
+.notes-app--dark .notes-editor__content a {
+  color: #ffffff;
+  text-decoration-color: #aeaeb2;
+}
+
+.notes-app--dark .editor-image--selected {
+  outline-color: #ffffff;
+}
+
+.notes-app--dark .toolbar-signout {
+  color: #1c1c1e;
+  background: #f2f2f7;
+  border-color: #f2f2f7;
+}
+
+.notes-app--dark .toolbar-signout:hover {
+  background: #ffffff;
 }
 
 .notes-app--dark .notes-editor__content code,
 .notes-app--dark .notes-editor__content th {
   background: #2c2c2e;
+}
+
+.notes-app--dark .notes-editor__content .github-code-block__content {
+  background: #242426;
+  color: #f2f2f7;
+}
+
+.notes-app--dark .github-code-block {
+  border-color: #48484a;
+  background: #242426;
+  color: #f2f2f7;
+}
+
+.notes-app--dark .github-code-block__header {
+  border-bottom-color: #48484a;
+  background: #2c2c2e;
+  color: #aeaeb2;
+}
+
+.notes-app--dark .github-code-block__copy {
+  border-color: #545456;
+  background: #3a3a3c;
+  color: #f2f2f7;
+}
+
+.notes-app--dark .github-code-block__copy:hover {
+  border-color: #6c6c70;
+  background: #48484a;
 }
 
 .notes-app--dark .notes-editor__content th,
@@ -972,9 +1098,9 @@
 }
 
 .notes-app--dark .ghost-button--bright {
-  color: #2c2100;
-  background: #ffd85a;
-  border-color: #f0c944;
+  color: #1c1c1e;
+  background: #f2f2f7;
+  border-color: #f2f2f7;
 }
 
 .notes-empty {
@@ -1025,7 +1151,14 @@
   }
 
   .notes-stage {
+    display: block;
     width: 100%;
+  }
+
+  .notes-workspace {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
   .notes-toolbar {

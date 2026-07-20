@@ -87,6 +87,7 @@ export function getNote(noteId: number) {
 export function updateNote(noteId: number, payload: NotePayload) {
   return request<Note>(`/notes/${noteId}`, {
     method: 'PUT',
+    keepalive: true,
     body: JSON.stringify(payload),
   })
 }

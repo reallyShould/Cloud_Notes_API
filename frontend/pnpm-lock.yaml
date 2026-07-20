@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@tiptap/extension-code-block':
+        specifier: 3.27.4
+        version: 3.27.4(@tiptap/core@3.27.4(@tiptap/pm@3.27.4))(@tiptap/pm@3.27.4)
       '@tiptap/extension-color':
         specifier: ^3.27.4
         version: 3.27.4(@tiptap/extension-text-style@3.27.4(@tiptap/core@3.27.4(@tiptap/pm@3.27.4)))
