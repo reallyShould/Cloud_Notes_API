@@ -3,6 +3,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
+      # PRODUCTION: override all three values in .env before the first database start.
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
       POSTGRES_DB: ${POSTGRES_DB:-main_db}
@@ -23,7 +24,11 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin}@db:5432/${POSTGRES_DB:-main_db}
+      # PRODUCTION: JWT_SECRET_KEY must be a persistent random value from .env.
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-0}
+      SESSION_MAX_AGE_SECONDS: ${SESSION_MAX_AGE_SECONDS:-315360000}
+      # Keep true behind Caddy HTTPS. Use false only for local plain-HTTP development.
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       SQL_ECHO: ${SQL_ECHO:-false}
       REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-true}
@@ -53,8 +58,8 @@ services:
       args:
         VITE_API_BASE_URL: /api
     restart: unless-stopped
-    ports:
-      - "${APP_PORT:-8080}:80"
+    expose:
+      - "80"
     depends_on:
       server:
         condition: service_healthy
@@ -66,9 +71,32 @@ services:
     networks:
       - app-network
 
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      # PRODUCTION: DOMAIN must resolve publicly to this server before Caddy starts.
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    ports:
+      # PRODUCTION: forward TCP 80/443 (and optionally UDP 443) from the router.
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    networks:
+      - app-network
+
 volumes:
   pgdata:
   uploads:
+  caddy_data:
+  caddy_config:
 
 networks:
   app-network:

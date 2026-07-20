@@ -5,9 +5,11 @@ import secrets
 import jwt
 from datetime import datetime, timedelta, timezone
 
+# PRODUCTION: set a persistent random JWT_SECRET_KEY in .env. The fallback changes on restart.
 SECRET_KEY = os.getenv("JWT_SECRET_KEY") or secrets.token_urlsafe(48)
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+# Set to 0 for non-expiring tokens. A finite value is safer for public deployments.
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "0"))
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -19,12 +21,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(user_id: int) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-
     to_encode = {
         "sub": str(user_id),
-        "exp": expire
     }
+    if JWT_EXPIRE_MINUTES > 0:
+        to_encode["exp"] = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

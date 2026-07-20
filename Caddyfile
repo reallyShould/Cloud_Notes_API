@@ -1,0 +1,12 @@
+# DOMAIN is loaded from .env through Docker Compose.
+# In production it must be a public DNS name pointing to the server.
+{$DOMAIN} {
+    encode zstd gzip
+    # Nginx serves the built frontend and proxies /api to FastAPI.
+    reverse_proxy frontend:80
+
+    header {
+        # Remove or lower max-age while testing HTTPS configuration changes.
+        Strict-Transport-Security "max-age=31536000"
+    }
+}

@@ -18,6 +18,8 @@ COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
 REGISTRATION_ENABLED = os.getenv("REGISTRATION_ENABLED", "true").lower() == "true"
 LOGIN_WINDOW_SECONDS = 60
 LOGIN_MAX_ATTEMPTS = 5
+# PRODUCTION: configure a shorter lifetime in .env when persistent login is not required.
+SESSION_MAX_AGE_SECONDS = int(os.getenv("SESSION_MAX_AGE_SECONDS", str(10 * 365 * 24 * 60 * 60)))
 login_attempts: dict[str, list[float]] = {}
 
 @user_router.post("/register", response_model=UserPublic)
@@ -73,7 +75,7 @@ async def login(userdata:Login, request: Request, response:Response, db: AsyncSe
         httponly=True,
         secure=COOKIE_SECURE,
         samesite="lax",
-        max_age=1800
+        max_age=SESSION_MAX_AGE_SECONDS,
     )
 
     return {"message": "Login successful"}

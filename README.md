@@ -12,12 +12,13 @@ Self-hosted cloud notes with a focused React editor, FastAPI backend, PostgreSQL
 [![PostgreSQL](https://img.shields.io/badge/postgresql-grey?style=for-the-badge&logo=postgresql)](https://postgresql.org)
 [![Docker](https://img.shields.io/badge/docker-grey?style=for-the-badge&logo=docker)](https://docker.com)
 [![Nginx](https://img.shields.io/badge/nginx-grey?style=for-the-badge&logo=nginx)](https://nginx.org)
+[![Caddy](https://img.shields.io/badge/caddy-grey?style=for-the-badge&logo=caddy)](https://caddyserver.com)
 
 - **Frontend:** React 19, TypeScript, Vite, TipTap, and Lucide icons
 - **Backend:** FastAPI, Pydantic, and async SQLAlchemy 2.0
 - **Database:** PostgreSQL 16
 - **Authentication:** JWT in HttpOnly cookies with bcrypt password hashing
-- **Web server:** Nginx serving the production frontend and proxying `/api`
+- **Web server:** Caddy providing automatic HTTPS in front of the internal Nginx service
 - **Deployment:** Docker Compose with health checks and persistent volumes
 
 ## 🚀 Quick Start (Docker)
@@ -27,29 +28,36 @@ Docker or OrbStack is the only requirement. Python, Node.js, Nginx, and PostgreS
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/reallyShould/Cloud_Notes_api.git
+   git clone <repository-url>
    cd Cloud_Notes_api
    ```
 
-2. **Start the complete application with one command:**
+2. **Create the environment file and set a public domain:**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Set `DOMAIN` to a DNS name that points to the router's public IP. Forward TCP ports 80 and 443 from the router to the Docker host before starting the stack.
+
+3. **Start the complete application with one command:**
 
    ```bash
    docker compose up -d --build
    ```
 
-3. **Open Cloud Notes:**
+4. **Open Cloud Notes:**
 
-   - On the Docker host: `http://localhost:8080`
-   - From another device on the home network: `http://SERVER_IP:8080`
-   - API documentation: `http://SERVER_IP:8080/api/docs`
+   - Application: `https://notes.example.com`
+   - API documentation: `https://notes.example.com/api/docs`
 
-The default published port is **8080**. PostgreSQL and FastAPI are not published on the host and are reachable only through the private Docker network. All browser requests use the same Nginx origin, so no domain is required.
+Caddy obtains and renews the public TLS certificate automatically. PostgreSQL, FastAPI, Nginx, and the Vite build are reachable only through the private Docker network.
 
 ---
 
-## ⚙️ Optional Configuration
+## ⚙️ Configuration
 
-The application works without an `.env` file. For a permanent home-server installation, copy the example before the first start:
+Create `.env` before the first start:
 
 ```bash
 cp .env.example .env
@@ -58,19 +66,23 @@ cp .env.example .env
 Recommended settings:
 
 ```dotenv
-APP_PORT=8080
+DOMAIN=notes.example.com
 POSTGRES_USER=cloud_notes
 POSTGRES_PASSWORD=use-a-long-random-password
 POSTGRES_DB=cloud_notes
 JWT_SECRET_KEY=use-a-random-secret-at-least-32-bytes-long
-COOKIE_SECURE=false
+JWT_EXPIRE_MINUTES=43200
+SESSION_MAX_AGE_SECONDS=2592000
+COOKIE_SECURE=true
 REGISTRATION_ENABLED=true
 SQL_ECHO=false
 ```
 
-- `APP_PORT` changes the single host port exposed by the stack.
-- `JWT_SECRET_KEY` keeps existing login sessions valid after backend recreation. Without it, a secure temporary key is generated at every backend start.
-- `COOKIE_SECURE=false` is required for plain HTTP access by local IP. Set it to `true` only when the application is served through HTTPS.
+- `DOMAIN` must resolve to the router's public IP. Dynamic addresses can be maintained with any compatible DDNS provider.
+- `JWT_SECRET_KEY` keeps login sessions valid after backend recreation. Without it, a secure temporary key is generated at every backend start and existing sessions are invalidated.
+- `JWT_EXPIRE_MINUTES` controls token lifetime. `43200` is 30 days; `0` explicitly enables non-expiring tokens.
+- `SESSION_MAX_AGE_SECONDS` controls the browser cookie lifetime and should match the intended token lifetime.
+- `COOKIE_SECURE=true` prevents authentication cookies from being sent over plain HTTP.
 - Set `REGISTRATION_ENABLED=false` after creating the required accounts if public registration is not needed.
 - Database credentials must be selected before the PostgreSQL volume is initialized. Changing them later does not modify an existing database volume.
 
@@ -80,15 +92,63 @@ Apply configuration changes with:
 docker compose up -d --build
 ```
 
+## ✅ Production Checklist
+
+Before exposing the application to the internet:
+
+1. **Create the local environment file:**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Replace every value marked `PRODUCTION` in `.env`:**
+
+   - set a real public `DOMAIN`;
+   - choose PostgreSQL credentials before the first database start;
+   - generate and preserve a JWT signing key:
+
+     ```bash
+     openssl rand -hex 32
+     ```
+
+3. **Configure DNS:** point the selected domain to the router's public IP. Configure a DDNS updater if that address changes periodically.
+
+4. **Give the Docker host a fixed LAN address:** use a DHCP reservation or a static network configuration.
+
+5. **Configure router forwarding:**
+
+   - TCP 80 to the Docker host port 80;
+   - TCP 443 to the Docker host port 443;
+   - UDP 443 to the Docker host port 443 only when HTTP/3 is wanted.
+
+6. **Do not expose internal services:** ports 5432, 8000, and the former development port 8080 must remain closed externally.
+
+7. **Keep secure cookies enabled:** `COOKIE_SECURE=true` is required for the HTTPS deployment.
+
+8. **Restrict account creation:** after creating the intended accounts, consider setting `REGISTRATION_ENABLED=false` and recreating the server container.
+
+9. **Verify certificate issuance:**
+
+   ```bash
+   docker compose logs -f caddy
+   ```
+
+10. **Test from an external network:** open the configured HTTPS domain over cellular data instead of the server's local Wi-Fi.
+
+11. **Configure backups:** regularly back up both the PostgreSQL data and uploaded attachment volume.
+
 ## 🔌 Published Ports
 
 | Service | Container port | Host port | Exposure |
 |---|---:|---:|---|
-| Nginx frontend | 80 | `8080` by default | Home network |
+| Caddy HTTP | 80 | `80/tcp` | Public; redirects to HTTPS and handles ACME |
+| Caddy HTTPS | 443 | `443/tcp` and `443/udp` | Public HTTPS and HTTP/3 |
+| Nginx frontend | 80 | Not published | Docker network only |
 | FastAPI backend | 8000 | Not published | Docker network only |
 | PostgreSQL | 5432 | Not published | Docker network only |
 
-If `APP_PORT=9090` is set, the application will be available at `http://SERVER_IP:9090` and no other host ports will be opened by this Compose project.
+Do not forward ports 5432, 8000, or the former frontend port 8080 from the router.
 
 ---
 
@@ -128,7 +188,7 @@ docker compose ps
 Follow application logs:
 
 ```bash
-docker compose logs -f frontend server db
+docker compose logs -f caddy frontend server db
 ```
 
 Restart the stack:
@@ -164,6 +224,7 @@ Cloud_Notes_api/
 │   ├── src/                 # React application, styles, API client, and localization
 │   ├── Dockerfile           # Vite build and Nginx runtime
 │   └── nginx.conf           # Static frontend and `/api` reverse proxy
+├── Caddyfile                # Public HTTPS and reverse proxy configuration
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
@@ -171,10 +232,11 @@ Cloud_Notes_api/
 
 ## 🔒 Security Notes
 
-- Only the Nginx application port is published by default.
+- Only Caddy ports 80 and 443 are published.
 - Authentication cookies are HttpOnly and use `SameSite=Lax`.
+- Token and cookie lifetimes are configurable. The production example uses 30 days; signing out invalidates the browser cookie immediately.
 - Login attempts are limited per client address.
 - Uploaded images are size-limited, streamed to disk, and checked by extension, MIME type, and file signature.
 - SQL parameter logging is disabled by default.
 - The backend container runs as an unprivileged user.
-- Plain HTTP does not encrypt credentials or note contents. Use the application only on a trusted LAN, or place it behind HTTPS, Tailscale, or another VPN when remote access is required.
+- Caddy redirects HTTP to HTTPS and manages certificate renewal automatically.
