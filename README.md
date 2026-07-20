@@ -4,6 +4,18 @@ Self-hosted cloud notes with a focused React editor, FastAPI backend, PostgreSQL
 
 ---
 
+## 🖥️ Interface
+
+### Dark theme
+
+![Cloud Notes dark theme](docs/screenshots/cloud-notes-dark.png)
+
+### Light theme
+
+![Cloud Notes light theme](docs/screenshots/cloud-notes-light.png)
+
+---
+
 ## 🛠️ Technology Stack
 
 [![React](https://img.shields.io/badge/react-grey?style=for-the-badge&logo=react)](https://react.dev)
@@ -52,6 +64,40 @@ Docker or OrbStack is the only requirement. Python, Node.js, Nginx, and PostgreS
    - API documentation: `https://notes.example.com/api/docs`
 
 Caddy obtains and renews the public TLS certificate automatically. PostgreSQL, FastAPI, Nginx, and the Vite build are reachable only through the private Docker network.
+
+## 🧪 Local HTTP Testing
+
+Local testing does not require a domain, TLS certificate, router configuration, or a production `.env` file. Start only PostgreSQL, FastAPI, and Nginx with the local override:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build db server frontend
+```
+
+Open:
+
+- Application: `http://localhost:8080`
+- API documentation: `http://localhost:8080/api/docs`
+- Health check: `http://localhost:8080/api/system/health-check`
+
+To test from another device on the same LAN, replace `localhost` with the Docker host's local IP address:
+
+```text
+http://SERVER_LAN_IP:8080
+```
+
+The local override sets `COOKIE_SECURE=false` so authentication works over plain HTTP. It publishes only the Nginx frontend; FastAPI and PostgreSQL remain internal Docker services.
+
+Stop the local stack with:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml down
+```
+
+Set a different local port when 8080 is occupied:
+
+```bash
+LOCAL_APP_PORT=9090 docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build db server frontend
+```
 
 ---
 
