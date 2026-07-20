@@ -1,0 +1,10 @@
+# Local HTTP override. Caddy is intentionally excluded from the startup command.
+services:
+  server:
+    environment:
+      COOKIE_SECURE: "false"
+      ROOT_PATH: /api
+
+  frontend:
+    ports:
+      - "${LOCAL_APP_PORT:-8080}:80"

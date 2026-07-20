@@ -76,7 +76,7 @@ services:
     restart: unless-stopped
     environment:
       # PRODUCTION: DOMAIN must resolve publicly to this server before Caddy starts.
-      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+      DOMAIN: ${DOMAIN:-localhost}
     ports:
       # PRODUCTION: forward TCP 80/443 (and optionally UDP 443) from the router.
       - "80:80"

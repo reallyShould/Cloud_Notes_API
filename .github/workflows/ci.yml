@@ -1,4 +1,4 @@
-name: FastAPI Continuous Integration
+name: Cloud Notes Continuous Integration
 
 on:
   push:
@@ -9,6 +9,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # CI uses isolated non-production values and never requires a committed .env file.
+      DOMAIN: localhost
+      POSTGRES_USER: ci_user
+      POSTGRES_PASSWORD: ci_password
+      POSTGRES_DB: cloud_notes_ci
+      JWT_SECRET_KEY: ci-only-secret-key-not-used-in-production
+      COOKIE_SECURE: "false"
 
     steps:
     - name: Checkout code
@@ -29,6 +37,9 @@ jobs:
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-    - name: Test Docker Build
+    - name: Validate Docker Compose
+      run: docker compose config --quiet
+
+    - name: Test Docker Builds
       run: |
-        docker compose build server
+        docker compose build server frontend
