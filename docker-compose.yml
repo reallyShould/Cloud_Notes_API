@@ -16,6 +16,9 @@ services:
       retries: 10
     networks:
       - app-network
+    command: ["postgres", "-c", "listen_addresses=*"]
+    ports:
+      - "5432:5432"
 
   server:
     build:
