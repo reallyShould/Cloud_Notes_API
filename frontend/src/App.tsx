@@ -79,6 +79,16 @@ import type { NoteEvent } from './lib/api'
 import type { AuthPayload, Note, NotePayload } from './types'
 import { translate } from './i18n'
 import type { Locale, TranslationKey } from './i18n'
+import {
+  defaultDraft,
+  estimateReadingTime,
+  extractSummary,
+  formatDate,
+  htmlToPlainText,
+  noteToPayload,
+  payloadEqualsNote,
+  sortNotes,
+} from './lib/note-utils'
 
 type SessionStatus = 'booting' | 'anonymous' | 'authenticated'
 type AuthMode = 'login' | 'register'
@@ -88,75 +98,6 @@ type Shelf = 'all' | 'pinned' | 'favorites' | 'archived'
 interface Toast {
   id: number
   text: string
-}
-
-const defaultDraft: NotePayload = {
-  title: '',
-  text: '',
-  summary: '',
-  tags: [],
-  is_pinned: false,
-  is_favorite: false,
-  is_archived: false,
-}
-
-function formatDate(value: string, locale: Locale) {
-  return new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-US', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
-}
-
-function sortNotes(items: Note[]) {
-  return [...items].sort(
-    (left, right) =>
-      new Date(right.edit_time).getTime() - new Date(left.edit_time).getTime(),
-  )
-}
-
-function htmlToPlainText(value: string) {
-  if (!value) {
-    return ''
-  }
-
-  const doc = new DOMParser().parseFromString(value, 'text/html')
-  return doc.body.textContent?.replace(/\s+/g, ' ').trim() ?? ''
-}
-
-function extractSummary(value: string) {
-  const text = htmlToPlainText(value)
-  return text.slice(0, 280)
-}
-
-function estimateReadingTime(words: number) {
-  return Math.max(1, Math.ceil(words / 180))
-}
-
-function noteToPayload(note: Note): NotePayload {
-  return {
-    title: note.title,
-    text: note.text ?? '',
-    summary: note.summary ?? '',
-    tags: note.tags,
-    is_pinned: note.is_pinned,
-    is_favorite: note.is_favorite,
-    is_archived: note.is_archived,
-  }
-}
-
-function payloadEqualsNote(payload: NotePayload, note: Note | null) {
-  if (!note) {
-    return false
-  }
-
-  return JSON.stringify({
-    ...payload,
-    text: payload.text ?? '',
-    summary: payload.summary ?? '',
-  }) === JSON.stringify(noteToPayload(note))
 }
 
 function RemovableImageView({ node, deleteNode, selected }: NodeViewProps) {
