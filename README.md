@@ -138,6 +138,20 @@ Apply configuration changes with:
 docker compose up -d --build
 ```
 
+Database migrations run automatically before the API starts. To inspect or apply
+them manually, use:
+
+```bash
+docker compose run --rm server alembic current
+docker compose run --rm server alembic upgrade head
+```
+
+Create a migration after changing SQLAlchemy models with:
+
+```bash
+docker compose run --rm server alembic revision --autogenerate -m "describe change"
+```
+
 ## ✅ Production Checklist
 
 Before exposing the application to the internet:
