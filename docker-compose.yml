@@ -1,4 +1,16 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-network
+
   db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -37,6 +49,7 @@ services:
       REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-true}
       UPLOAD_DIR: /data/uploads
       ROOT_PATH: /api
+      REDIS_URL: redis://redis:6379/0
     volumes:
       - uploads:/data/uploads
       - ./backend/uploads:/legacy-uploads:ro
@@ -44,6 +57,8 @@ services:
       - "8000"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/system/health-check', timeout=3)"]

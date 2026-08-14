@@ -15,6 +15,7 @@ from .utils import decode_access_token
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await realtime_hub.start(os.getenv("REDIS_URL"))
     upload_dir = Path(os.getenv("UPLOAD_DIR", "uploads"))
     legacy_upload_dir = Path("/legacy-uploads")
     upload_dir.mkdir(parents=True, exist_ok=True)
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        await realtime_hub.stop()
         await engine.dispose()
 
 app = FastAPI(
