@@ -85,6 +85,8 @@ async def realtime_events(websocket: WebSocket):
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    finally:
         realtime_hub.disconnect(user_id, websocket)
 
 @app.get("/")
