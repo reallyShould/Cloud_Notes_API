@@ -1,4 +1,3 @@
-import json
 import re
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -32,11 +31,6 @@ def normalize_tags(tags: list[str]) -> list[str]:
     return normalized[:12]
 
 def serialize_note(note: Note) -> NotePublic:
-    try:
-        tags = json.loads(note.tags or "[]")
-    except json.JSONDecodeError:
-        tags = []
-
     normalized_text = LEGACY_ATTACHMENT_URL.sub(
         "/api/attachments/download/",
         note.text or "",
@@ -47,7 +41,7 @@ def serialize_note(note: Note) -> NotePublic:
         title=note.title,
         text=normalized_text,
         summary=note.summary,
-        tags=tags if isinstance(tags, list) else [],
+        tags=note.tags if isinstance(note.tags, list) else [],
         is_pinned=note.is_pinned,
         is_favorite=note.is_favorite,
         is_archived=note.is_archived,
@@ -64,7 +58,7 @@ async def create_note(userdata: NoteCreate, db: AsyncSession = Depends(get_db), 
         title=userdata.title,
         text=userdata.text,
         summary=userdata.summary,
-        tags=json.dumps(normalize_tags(userdata.tags)),
+        tags=normalize_tags(userdata.tags),
         is_pinned=userdata.is_pinned,
         is_favorite=userdata.is_favorite,
         is_archived=userdata.is_archived,
@@ -145,7 +139,7 @@ async def update_note(
     note.title = userdata.title
     note.text = userdata.text
     note.summary = userdata.summary
-    note.tags = json.dumps(normalize_tags(userdata.tags))
+    note.tags = normalize_tags(userdata.tags)
     note.is_pinned = userdata.is_pinned
     note.is_favorite = userdata.is_favorite
     note.is_archived = userdata.is_archived
