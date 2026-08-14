@@ -11,11 +11,14 @@ from .api.notes import notes_router
 from .api.system import system_router
 from .api.attachments import attachments_router
 from .realtime import realtime_hub
+from .rate_limit import login_rate_limiter
 from .utils import decode_access_token
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await realtime_hub.start(os.getenv("REDIS_URL"))
+    redis_url = os.getenv("REDIS_URL")
+    await realtime_hub.start(redis_url)
+    await login_rate_limiter.start(redis_url)
     upload_dir = Path(os.getenv("UPLOAD_DIR", "uploads"))
     legacy_upload_dir = Path("/legacy-uploads")
     upload_dir.mkdir(parents=True, exist_ok=True)
@@ -28,6 +31,7 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        await login_rate_limiter.stop()
         await realtime_hub.stop()
         await engine.dispose()
 
