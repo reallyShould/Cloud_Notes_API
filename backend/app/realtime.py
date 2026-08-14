@@ -82,6 +82,7 @@ class RealtimeHub:
             try:
                 await websocket.send_json(event)
             except Exception:
+                logger.debug("Removing a disconnected realtime client")
                 stale.append(websocket)
         for websocket in stale:
             self.disconnect(user_id, websocket)
