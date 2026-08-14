@@ -3,7 +3,7 @@ import asyncio
 import shutil
 from pathlib import Path
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import Base, engine
@@ -12,6 +12,8 @@ from .api.users import user_router
 from .api.notes import notes_router
 from .api.system import system_router
 from .api.attachments import attachments_router
+from .realtime import realtime_hub
+from .utils import decode_access_token
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -68,6 +70,22 @@ app.include_router(user_router)
 app.include_router(notes_router)
 app.include_router(system_router)
 app.include_router(attachments_router)
+
+
+@app.websocket("/events")
+async def realtime_events(websocket: WebSocket):
+    token = websocket.cookies.get("access_token")
+    user_id = decode_access_token(token) if token else None
+    if user_id is None:
+        await websocket.close(code=4401)
+        return
+
+    await realtime_hub.connect(user_id, websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        realtime_hub.disconnect(user_id, websocket)
 
 @app.get("/")
 async def root():

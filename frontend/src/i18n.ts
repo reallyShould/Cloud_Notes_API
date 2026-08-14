@@ -26,7 +26,7 @@ const translations = {
     welcomeBack: 'Welcome back, {login}.', signInPrompt: 'Sign in to open your notes workspace.', autosaved: 'Autosaved.', savedManually: 'Saved manually.',
     newNoteCreated: 'New note created.', newNoteToast: 'New note', deleted: 'Deleted', exported: 'Exported',
     imageInserted: 'Image inserted into note.', imageAdded: 'Image added', deleteConfirm: 'Delete “{title}”?', untitledNote: 'Untitled note',
-    copySuffix: 'copy', noteDuplicated: 'Note duplicated.', duplicated: 'Duplicated', noteDeleted: 'Note deleted.', saveFailed: 'Save failed', uploadFailed: 'Upload failed',
+    copySuffix: 'copy', noteDuplicated: 'Note duplicated.', duplicated: 'Duplicated', noteDeleted: 'Note deleted.', saveFailed: 'Save failed', noteConflict: 'This note was changed on another device. Your local text was kept and was not uploaded.', uploadFailed: 'Upload failed',
     accountCreated: 'Account created for {login}.', signedInAs: 'Signed in as {login}.', signedOut: 'Signed out.',
   },
   ru: {
@@ -54,7 +54,7 @@ const translations = {
     welcomeBack: 'С возвращением, {login}.', signInPrompt: 'Войдите, чтобы открыть заметки.', autosaved: 'Сохранено автоматически.', savedManually: 'Сохранено вручную.',
     newNoteCreated: 'Новая заметка создана.', newNoteToast: 'Новая заметка', deleted: 'Удалено', exported: 'Экспортировано',
     imageInserted: 'Изображение вставлено в заметку.', imageAdded: 'Изображение добавлено', deleteConfirm: 'Удалить «{title}»?', untitledNote: 'Без названия',
-    copySuffix: 'копия', noteDuplicated: 'Заметка продублирована.', duplicated: 'Продублировано', noteDeleted: 'Заметка удалена.', saveFailed: 'Ошибка сохранения', uploadFailed: 'Ошибка загрузки',
+    copySuffix: 'копия', noteDuplicated: 'Заметка продублирована.', duplicated: 'Продублировано', noteDeleted: 'Заметка удалена.', saveFailed: 'Ошибка сохранения', noteConflict: 'Заметка изменена на другом устройстве. Локальный текст сохранён и не был отправлен поверх новой версии.', uploadFailed: 'Ошибка загрузки',
     accountCreated: 'Аккаунт {login} создан.', signedInAs: 'Выполнен вход: {login}.', signedOut: 'Вы вышли из аккаунта.',
   },
 } as const

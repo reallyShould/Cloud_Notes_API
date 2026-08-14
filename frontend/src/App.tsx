@@ -68,11 +68,14 @@ import {
   getNotes,
   login,
   logout,
+  openNoteEvents,
   register,
   updateNote,
+  ApiError,
   updateUserTheme,
   uploadAttachment,
 } from './lib/api'
+import type { NoteEvent } from './lib/api'
 import type { AuthPayload, Note, NotePayload } from './types'
 import { translate } from './i18n'
 import type { Locale, TranslationKey } from './i18n'
@@ -313,6 +316,9 @@ function App() {
   const toastIdRef = useRef(0)
   const autosaveTimerRef = useRef<number | null>(null)
   const draftRevisionRef = useRef(0)
+  const draftBaseEditTimeRef = useRef<string | null>(null)
+  const draftRef = useRef(draft)
+  const notesRef = useRef(notes)
   const dirtySinceRef = useRef<number | null>(null)
   const selectedNoteIdRef = useRef<number | null>(null)
   const notesRefreshInFlightRef = useRef(false)
@@ -327,6 +333,8 @@ function App() {
   )
 
   const selectedNote = notes.find((note) => note.id === selectedNoteId) ?? null
+  draftRef.current = draft
+  notesRef.current = notes
   selectedNoteIdRef.current = selectedNoteId
   const shelfCounts = useMemo(
     () => ({
@@ -532,6 +540,7 @@ function App() {
 
   const syncDraft = useCallback((nextNote: Note | null) => {
     const payload = nextNote ? noteToPayload(nextNote) : defaultDraft
+    draftBaseEditTimeRef.current = nextNote?.edit_time ?? null
     draftRevisionRef.current += 1
     dirtySinceRef.current = null
     setDraft(payload)
@@ -616,6 +625,64 @@ function App() {
   }, [loadNotes, sessionStatus])
 
   useEffect(() => {
+    if (sessionStatus !== 'authenticated' || !editor) {
+      return
+    }
+
+    let socket: WebSocket | null = null
+    let reconnectTimer: number | null = null
+    let stopped = false
+
+    const connect = () => {
+      socket = openNoteEvents()
+      socket.onmessage = (message) => {
+        const event = JSON.parse(message.data as string) as NoteEvent
+        if (event.type === 'note_deleted') {
+          setNotes((current) => current.filter((note) => note.id !== event.note_id))
+          if (selectedNoteIdRef.current === event.note_id) {
+            setSelectedNoteId(null)
+          }
+          return
+        }
+
+        const incoming = event.note
+        const current = notesRef.current.find((note) => note.id === incoming.id)
+        const isOpen = selectedNoteIdRef.current === incoming.id
+        const hasLocalChanges = isOpen && current
+          ? !payloadEqualsNote(draftRef.current, current)
+          : false
+        const isSameContent = payloadEqualsNote(draftRef.current, incoming)
+
+        setNotes((items) => sortNotes([
+          incoming,
+          ...items.filter((note) => note.id !== incoming.id),
+        ]))
+
+        if (isOpen && (!hasLocalChanges || isSameContent)) {
+          syncDraft(incoming)
+        } else if (isOpen) {
+          setNotice(t('noteConflict'))
+          pushToast(t('noteConflict'))
+        }
+      }
+      socket.onclose = () => {
+        if (!stopped) {
+          reconnectTimer = window.setTimeout(connect, 1500)
+        }
+      }
+    }
+
+    connect()
+    return () => {
+      stopped = true
+      if (reconnectTimer !== null) {
+        window.clearTimeout(reconnectTimer)
+      }
+      socket?.close()
+    }
+  }, [editor, pushToast, sessionStatus, syncDraft, t])
+
+  useEffect(() => {
     if (!editor) {
       return
     }
@@ -644,6 +711,10 @@ function App() {
 
     const noteIdAtStart = selectedNoteId
     const revisionAtStart = draftRevisionRef.current
+    const expectedEditTime = draftBaseEditTimeRef.current
+    if (!expectedEditTime) {
+      return false
+    }
     setSaveState('saving')
 
     try {
@@ -654,13 +725,16 @@ function App() {
         summary: extractSummary(draft.text || ''),
       }
 
-      const updated = await updateNote(noteIdAtStart, payload)
+      const updated = await updateNote(noteIdAtStart, payload, expectedEditTime)
       setNotes((current) =>
         sortNotes(current.map((note) => (note.id === updated.id ? updated : note))),
       )
 
       const noNewerChanges = draftRevisionRef.current === revisionAtStart
       const sameNoteIsOpen = selectedNoteIdRef.current === noteIdAtStart
+      if (sameNoteIsOpen) {
+        draftBaseEditTimeRef.current = updated.edit_time
+      }
       if (noNewerChanges && sameNoteIsOpen) {
         dirtySinceRef.current = null
         setDraft(noteToPayload(updated))
@@ -676,9 +750,14 @@ function App() {
       return noNewerChanges
     } catch (error) {
       setSaveState('dirty')
-      setNotice(error instanceof Error ? error.message : 'Failed to save note.')
+      const message = error instanceof ApiError && error.status === 409
+        ? t('noteConflict')
+        : error instanceof Error
+          ? error.message
+          : 'Failed to save note.'
+      setNotice(message)
       if (!silent) {
-        pushToast(t('saveFailed'))
+        pushToast(message)
       }
       return false
     }

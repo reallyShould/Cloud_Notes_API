@@ -11,6 +11,7 @@ from ..database import get_db
 from ..models import User
 from ..dependencies import get_current_user
 from ..utils import hash_password, verify_password, create_access_token
+from ..realtime import realtime_hub
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -82,8 +83,12 @@ async def login(userdata:Login, request: Request, response:Response, db: AsyncSe
 
 
 @user_router.post("/logout")
-async def logout(response: Response):
+async def logout(
+    response: Response,
+    current_user: User = Depends(get_current_user),
+):
     response.delete_cookie(key="access_token", secure=COOKIE_SECURE, samesite="lax")
+    await realtime_hub.disconnect_user(current_user.id)
 
     return {"message": "Logout successful"}
 

@@ -5,6 +5,25 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '/api').replace(
   '',
 )
 
+export class ApiError extends Error {
+  readonly status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+export type NoteEvent =
+  | { type: 'note_created' | 'note_updated'; note: Note }
+  | { type: 'note_deleted'; note_id: number }
+
+export function openNoteEvents() {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return new WebSocket(`${protocol}//${window.location.host}${API_BASE_URL}/events`)
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: 'include',
@@ -28,7 +47,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       message = response.statusText || message
     }
 
-    throw new Error(message)
+    throw new ApiError(message, response.status)
   }
 
   if (response.status === 204) {
@@ -84,11 +103,15 @@ export function getNote(noteId: number) {
   return request<Note>(`/notes/${noteId}`)
 }
 
-export function updateNote(noteId: number, payload: NotePayload) {
+export function updateNote(
+  noteId: number,
+  payload: NotePayload,
+  expectedEditTime: string,
+) {
   return request<Note>(`/notes/${noteId}`, {
     method: 'PUT',
     keepalive: true,
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, expected_edit_time: expectedEditTime }),
   })
 }
 

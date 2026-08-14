@@ -10,6 +10,7 @@ from ..models import User, Note
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..schemas import NoteCreate, NoteUpdate, NotePublic
+from ..realtime import realtime_hub
 
 notes_router = APIRouter(prefix="/notes", tags=["Notes"])
 LEGACY_ATTACHMENT_URL = re.compile(
@@ -72,7 +73,12 @@ async def create_note(userdata: NoteCreate, db: AsyncSession = Depends(get_db), 
     db.add(note)
     await db.commit()
     await db.refresh(note)
-    return serialize_note(note)
+    result = serialize_note(note)
+    await realtime_hub.publish(
+        current_user.id,
+        {"type": "note_created", "note": result.model_dump(mode="json")},
+    )
+    return result
 
 @notes_router.get("", response_model=list[NotePublic])
 async def get_notes(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -105,6 +111,10 @@ async def delete_note(note_id: int, db: AsyncSession = Depends(get_db), current_
         raise HTTPException(status_code=404, detail="Note not found")
     await db.delete(note)
     await db.commit()
+    await realtime_hub.publish(
+        current_user.id,
+        {"type": "note_deleted", "note_id": note_id},
+    )
     return {"message": "Note deleted successfully"}
 
 @notes_router.put("/{note_id}", response_model=NotePublic)
@@ -114,12 +124,23 @@ async def update_note(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    query = select(Note).where(Note.creator_id == current_user.id, Note.id ==note_id)
+    query = (
+        select(Note)
+        .where(Note.creator_id == current_user.id, Note.id == note_id)
+        .with_for_update()
+    )
     result = await db.execute(query)
     note = result.scalar_one_or_none()
 
     if note is None:
         raise HTTPException(status_code=404, detail="Note not found")
+
+    expected_edit_time = userdata.expected_edit_time.replace(tzinfo=None)
+    if note.edit_time != expected_edit_time:
+        raise HTTPException(
+            status_code=409,
+            detail="Note was changed by another client",
+        )
 
     note.title = userdata.title
     note.text = userdata.text
@@ -131,4 +152,9 @@ async def update_note(
 
     await db.commit()
     await db.refresh(note)
-    return serialize_note(note)
+    result = serialize_note(note)
+    await realtime_hub.publish(
+        current_user.id,
+        {"type": "note_updated", "note": result.model_dump(mode="json")},
+    )
+    return result

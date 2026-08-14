@@ -24,6 +24,7 @@ class NoteCreate(BaseModel):
     is_archived: bool = False
 
 class NoteUpdate(BaseModel):
+    expected_edit_time: datetime
     title: str = Field(..., min_length=1, max_length=100)
     text: str | None = None
     summary: str | None = Field(default=None, max_length=280)
