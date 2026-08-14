@@ -48,7 +48,6 @@ import {
   Quote,
   Search,
   SquareCode,
-  SquarePen,
   Strikethrough,
   Table2,
   Trash2,
@@ -79,6 +78,8 @@ import type { AuthPayload, Note, NotePayload } from './types'
 import { translate } from './i18n'
 import type { Locale, TranslationKey } from './i18n'
 import { AuthScreen } from './components/AuthScreen'
+import { NotesSidebar } from './components/NotesSidebar'
+import type { Shelf } from './components/NotesSidebar'
 import {
   defaultDraft,
   estimateReadingTime,
@@ -93,7 +94,6 @@ import {
 type SessionStatus = 'booting' | 'anonymous' | 'authenticated'
 type AuthMode = 'login' | 'register'
 type SaveState = 'idle' | 'dirty' | 'saving' | 'saved'
-type Shelf = 'all' | 'pinned' | 'favorites' | 'archived'
 
 interface Toast {
   id: number
@@ -1109,50 +1109,18 @@ function App() {
 
   return (
     <main className={`app-shell notes-app${focusMode ? ' notes-app--focus' : ''}${darkMode ? ' notes-app--dark' : ''}`}>
-      <aside className={`notes-sidebar${focusMode ? ' notes-sidebar--hidden' : ''}`}>
-        <div className="notes-sidebar__top">
-          <button className="icon-button" type="button" onClick={() => void handleCreateNote()}>
-            <SquarePen size={16} />
-          </button>
-        </div>
-
-        <div className="notes-sidebar__section">
-          <h2>{t(activeShelf === 'all' ? 'notes' : activeShelf === 'archived' ? 'archive' : activeShelf)}</h2>
-          <span>{shelfCounts[activeShelf]}</span>
-        </div>
-
-        <div className="sidebar-shelves">
-          {(['all', 'pinned', 'favorites', 'archived'] as Shelf[]).map((shelf) => (
-            <button
-              key={shelf}
-              className={`sidebar-shelf${activeShelf === shelf ? ' sidebar-shelf--active' : ''}`}
-              type="button"
-              onClick={() => setActiveShelf(shelf)}
-            >
-              <span>{t(shelf === 'all' ? 'notes' : shelf === 'archived' ? 'archive' : shelf)}</span>
-              <span>{shelfCounts[shelf]}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="notes-list notes-list--dark">
-          {notesBusy ? <p className="muted muted--dark">{t('loading')}</p> : null}
-          {filteredNotes.map((note) => (
-            <button
-              key={note.id}
-              className={`note-row${note.id === selectedNoteId ? ' note-row--active' : ''}`}
-              type="button"
-              onClick={() => void handleSelectNote(note.id)}
-            >
-              <strong>{note.title}</strong>
-              <span>{note.summary || htmlToPlainText(note.text ?? '') || t('emptyNote')}</span>
-            </button>
-          ))}
-          {!notesBusy && !filteredNotes.length ? (
-            <p className="muted muted--dark">{t('noShelfNotes')}</p>
-          ) : null}
-        </div>
-      </aside>
+      <NotesSidebar
+        activeShelf={activeShelf}
+        busy={notesBusy}
+        counts={shelfCounts}
+        hidden={focusMode}
+        notes={filteredNotes}
+        selectedNoteId={selectedNoteId}
+        t={t}
+        onCreate={() => void handleCreateNote()}
+        onSelect={(noteId) => void handleSelectNote(noteId)}
+        onShelfChange={setActiveShelf}
+      />
 
       <section className="notes-workspace">
         <header className="notes-toolbar">
