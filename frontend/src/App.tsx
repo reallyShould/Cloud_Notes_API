@@ -41,7 +41,6 @@ import {
   Link2,
   List,
   ListOrdered,
-  Languages,
   LogOut,
   Moon,
   Pin,
@@ -79,6 +78,7 @@ import type { NoteEvent } from './lib/api'
 import type { AuthPayload, Note, NotePayload } from './types'
 import { translate } from './i18n'
 import type { Locale, TranslationKey } from './i18n'
+import { AuthScreen } from './components/AuthScreen'
 import {
   defaultDraft,
   estimateReadingTime,
@@ -1090,58 +1090,20 @@ function App() {
 
   if (sessionStatus === 'anonymous') {
     return (
-      <main className="app-shell auth-screen">
-        <section className="auth-screen__panel">
-          <form className="auth-form auth-form--dark" onSubmit={handleAuthSubmit}>
-            <label>
-              <span>{t('login')}</span>
-              <input
-                required
-                type="text"
-                value={authForm.login}
-                onChange={(event) =>
-                  setAuthForm((current) => ({ ...current, login: event.target.value }))
-                }
-              />
-            </label>
-
-            <label>
-              <span>{t('password')}</span>
-              <input
-                required
-                type="password"
-                value={authForm.password}
-                onChange={(event) =>
-                  setAuthForm((current) => ({ ...current, password: event.target.value }))
-                }
-              />
-            </label>
-
-            {authError ? <p className="form-error">{authError}</p> : null}
-
-            <button className="button button--bright" disabled={authBusy} type="submit">
-              {authMode === 'login' ? t('openWorkspace') : t('createAccount')}
-            </button>
-
-            <button
-              className="auth-switch"
-              type="button"
-              onClick={() =>
-                setAuthMode((current) => (current === 'login' ? 'register' : 'login'))
-              }
-            >
-              {authMode === 'login' ? t('createInstead') : t('existingAccount')}
-            </button>
-            <button
-              className="auth-switch"
-              type="button"
-              onClick={() => setLocale((current) => (current === 'en' ? 'ru' : 'en'))}
-            >
-              <Languages size={15} /> {locale === 'en' ? 'Русский' : 'English'}
-            </button>
-          </form>
-        </section>
-      </main>
+      <AuthScreen
+        busy={authBusy}
+        error={authError}
+        form={authForm}
+        locale={locale}
+        mode={authMode}
+        t={t}
+        onFormChange={setAuthForm}
+        onSubmit={handleAuthSubmit}
+        onToggleLocale={() => setLocale((current) => (current === 'en' ? 'ru' : 'en'))}
+        onToggleMode={() =>
+          setAuthMode((current) => (current === 'login' ? 'register' : 'login'))
+        }
+      />
     )
   }
 
