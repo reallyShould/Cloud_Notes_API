@@ -33,6 +33,7 @@ import {
   Code2,
   Copy,
   Download,
+  Ellipsis,
   Highlighter,
   Heading1,
   Heading2,
@@ -42,6 +43,7 @@ import {
   List,
   ListOrdered,
   LogOut,
+  Menu,
   Moon,
   Pin,
   Star,
@@ -53,7 +55,6 @@ import {
   Trash2,
   Underline as UnderlineIcon,
   Unlink,
-  Focus,
   Sun,
   X,
 } from 'lucide-react'
@@ -82,7 +83,6 @@ import { NotesSidebar } from './components/NotesSidebar'
 import type { Shelf } from './components/NotesSidebar'
 import {
   defaultDraft,
-  estimateReadingTime,
   extractSummary,
   formatDate,
   htmlToPlainText,
@@ -235,11 +235,12 @@ function App() {
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [notesBusy, setNotesBusy] = useState(false)
   const [deleteBusy, setDeleteBusy] = useState(false)
-  const [notice, setNotice] = useState('Private notes synced with secure cookie auth.')
+  const [, setNotice] = useState('Private notes synced with secure cookie auth.')
   const [searchQuery, setSearchQuery] = useState('')
   const [activeShelf, setActiveShelf] = useState<Shelf>('all')
   const [toolbarOpen, setToolbarOpen] = useState(false)
-  const [focusMode, setFocusMode] = useState(false)
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false)
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = window.localStorage.getItem('notes-theme')
     return savedTheme
@@ -274,6 +275,9 @@ function App() {
   )
 
   const selectedNote = notes.find((note) => note.id === selectedNoteId) ?? null
+  const activeShelfTitle = t(
+    activeShelf === 'all' ? 'notes' : activeShelf === 'archived' ? 'archive' : activeShelf,
+  )
   draftRef.current = draft
   notesRef.current = notes
   selectedNoteIdRef.current = selectedNoteId
@@ -462,6 +466,8 @@ function App() {
       codeBlock: currentEditor?.isActive('codeBlock') ?? false,
       highlight: currentEditor?.isActive('highlight') ?? false,
       link: currentEditor?.isActive('link') ?? false,
+      heading1: currentEditor?.isActive('heading', { level: 1 }) ?? false,
+      heading2: currentEditor?.isActive('heading', { level: 2 }) ?? false,
       bulletList: currentEditor?.isActive('bulletList') ?? false,
       orderedList: currentEditor?.isActive('orderedList') ?? false,
       taskList: currentEditor?.isActive('taskList') ?? false,
@@ -477,7 +483,6 @@ function App() {
   const dirty = selectedNote ? !payloadEqualsNote(draft, selectedNote) : false
   const plainText = htmlToPlainText(draft.text ?? '')
   const wordCount = plainText ? plainText.split(/\s+/).length : 0
-  const readingTime = estimateReadingTime(wordCount)
 
   const syncDraft = useCallback((nextNote: Note | null) => {
     const payload = nextNote ? noteToPayload(nextNote) : defaultDraft
@@ -532,7 +537,7 @@ function App() {
         const user = await getCurrentUser()
         setDarkMode(user.theme === 'dark')
         setSessionStatus('authenticated')
-        setNotice(t('welcomeBack', { login: user.login }))
+        setNotice('')
         await loadNotes()
       } catch {
         setNotes([])
@@ -768,6 +773,7 @@ function App() {
     }
 
     setSelectedNoteId(nextNoteId)
+    setMobileNavigationOpen(false)
   }, [dirty, persistCurrentNote, selectedNoteId, t])
 
   const handleCreateNote = useCallback(async () => {
@@ -779,6 +785,7 @@ function App() {
 
       setNotes((current) => sortNotes([note, ...current.filter((item) => item.id !== note.id)]))
       setSelectedNoteId(note.id)
+      setMobileNavigationOpen(false)
       setNotice(t('newNoteCreated'))
       pushToast(t('newNoteToast'))
       window.setTimeout(() => titleRef.current?.focus(), 60)
@@ -1108,24 +1115,153 @@ function App() {
   }
 
   return (
-    <main className={`app-shell notes-app${focusMode ? ' notes-app--focus' : ''}${darkMode ? ' notes-app--dark' : ''}`}>
+    <main className={`app-shell notes-app${darkMode ? ' notes-app--dark' : ''}`}>
       <NotesSidebar
         activeShelf={activeShelf}
         busy={notesBusy}
         counts={shelfCounts}
-        hidden={focusMode}
+        hidden={false}
+        mobileOpen={mobileNavigationOpen}
         notes={filteredNotes}
         selectedNoteId={selectedNoteId}
         t={t}
         onCreate={() => void handleCreateNote()}
+        onClose={() => setMobileNavigationOpen(false)}
         onSelect={(noteId) => void handleSelectNote(noteId)}
-        onShelfChange={setActiveShelf}
+        onShelfChange={(shelf) => {
+          setActiveShelf(shelf)
+          setMobileNavigationOpen(false)
+        }}
       />
+      {mobileNavigationOpen ? (
+        <button
+          className="mobile-sidebar-backdrop"
+          type="button"
+          aria-label={t('close')}
+          onClick={() => setMobileNavigationOpen(false)}
+        />
+      ) : null}
 
       <section className="notes-workspace">
+        <header className="mobile-app-bar">
+          <button
+            className="icon-button"
+            type="button"
+            aria-label={t('notes')}
+            onClick={() => setMobileNavigationOpen(true)}
+          >
+            <Menu size={22} />
+          </button>
+          <strong>{activeShelfTitle}</strong>
+          <div className="mobile-app-bar__actions">
+            <button
+              className="icon-button"
+              type="button"
+              aria-label={t('newNote')}
+              onClick={() => void handleCreateNote()}
+            >
+              <span className="mobile-add-icon" aria-hidden="true">+</span>
+            </button>
+            <button
+              className={`icon-button${mobileActionsOpen ? ' icon-button--active' : ''}`}
+              type="button"
+              aria-label={t('moreActions')}
+              onClick={() => setMobileActionsOpen((current) => !current)}
+            >
+              <Ellipsis size={22} />
+            </button>
+          </div>
+        </header>
+
+        {mobileActionsOpen ? (
+          <section className="mobile-actions-panel" aria-label={t('moreActions')}>
+            <input
+              className="mobile-actions-panel__search"
+              placeholder={t('search')}
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
+            {selectedNote ? (
+              <div className="mobile-actions-panel__note-actions">
+                <button
+                  className={`icon-button${draft.is_pinned ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('pinned')}
+                  onClick={() => updateDraftFlag('is_pinned')}
+                >
+                  <Pin size={18} />
+                </button>
+                <button
+                  className={`icon-button${draft.is_favorite ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('favorites')}
+                  onClick={() => updateDraftFlag('is_favorite')}
+                >
+                  <Star size={18} />
+                </button>
+                <button
+                  className={`icon-button${draft.is_archived ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('archive')}
+                  onClick={() => updateDraftFlag('is_archived')}
+                >
+                  <Archive size={18} />
+                </button>
+                <button className="icon-button" type="button" aria-label={t('exported')} onClick={handleExportNote}>
+                  <Download size={18} />
+                </button>
+              </div>
+            ) : null}
+            <input
+              className="mobile-actions-panel__tags"
+              placeholder={t('tags')}
+              type="text"
+              value={tagInput}
+              onBlur={() => applyTags(tagInput)}
+              onChange={(event) => setTagInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  applyTags(tagInput)
+                }
+              }}
+            />
+            <div className="mobile-actions-panel__preferences">
+              <button
+                className="icon-button toolbar-theme-button"
+                type="button"
+                aria-label={darkMode ? t('switchLight') : t('switchDark')}
+                onClick={() => setDarkMode((current) => !current)}
+              >
+                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <button
+                className="icon-button locale-button"
+                type="button"
+                aria-label={t('language')}
+                onClick={() => setLocale((current) => (current === 'en' ? 'ru' : 'en'))}
+              >
+                <span className="locale-code">{locale.toUpperCase()}</span>
+              </button>
+              <button
+                className="icon-button toolbar-signout"
+                disabled={authBusy}
+                type="button"
+                title={authBusy ? t('signingOut') : t('signOut')}
+                aria-label={authBusy ? t('signingOut') : t('signOut')}
+                onClick={handleLogout}
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          </section>
+        ) : null}
+
         <header className="notes-toolbar">
           <div className="notes-toolbar__center">
-            <div className="toolbar-pill">
+            <div className="toolbar-format-window">
+              <div className="toolbar-pill">
               <button
                 className={`toolbar-pill__button${toolbarState?.bold ? ' is-active' : ''}`}
                 type="button"
@@ -1234,10 +1370,9 @@ function App() {
               <button className="toolbar-pill__button" type="button" onClick={() => fileInputRef.current?.click()}>
                 <ImagePlus size={16} />
               </button>
-            </div>
-
-            {toolbarOpen ? (
-              <div className="format-popover">
+              </div>
+              {toolbarOpen ? (
+                <div className="format-popover">
                 <button type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>
                   <Heading1 size={16} />
                   <span>{t('title')}</span>
@@ -1262,111 +1397,102 @@ function App() {
                   <span className="format-popover__swatch format-popover__swatch--clear" />
                   <span>{t('resetColor')}</span>
                 </button>
-              </div>
-            ) : null}
+                </div>
+              ) : null}
+            </div>
           </div>
 
           <div className="notes-toolbar__right">
-            <button
-              className={`icon-button${focusMode ? ' icon-button--active' : ''}`}
-              type="button"
-              onClick={() => setFocusMode((current) => !current)}
-            >
-              <Focus size={16} />
-            </button>
-            {selectedNote ? (
-              <>
-                <button
-                  className={`icon-button${draft.is_pinned ? ' icon-button--active' : ''}`}
-                  type="button"
-                  onClick={() => updateDraftFlag('is_pinned')}
-                >
-                  <Pin size={16} />
-                </button>
-                <button
-                  className={`icon-button${draft.is_favorite ? ' icon-button--active' : ''}`}
-                  type="button"
-                  onClick={() => updateDraftFlag('is_favorite')}
-                >
-                  <Star size={16} />
-                </button>
-                <button
-                  className={`icon-button${draft.is_archived ? ' icon-button--active' : ''}`}
-                  type="button"
-                  onClick={() => updateDraftFlag('is_archived')}
-                >
-                  <Archive size={16} />
-                </button>
-              </>
-            ) : null}
-            <button className="icon-button" type="button" onClick={handleExportNote}>
-              <Download size={16} />
-            </button>
-            <button className="icon-button" type="button" onClick={() => setSearchQuery('')}>
-              <Search size={16} />
-            </button>
-            <input
-              className="toolbar-tags"
-              placeholder={t('tags')}
-              type="text"
-              value={tagInput}
-              onBlur={() => applyTags(tagInput)}
-              onChange={(event) => setTagInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  applyTags(tagInput)
-                }
-              }}
-            />
-            <input
-              className="toolbar-search"
-              placeholder={t('search')}
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-            />
-            <button
-              className="icon-button toolbar-theme-button"
-              type="button"
-              title={darkMode ? t('lightTheme') : t('darkTheme')}
-              aria-label={darkMode ? t('switchLight') : t('switchDark')}
-              onClick={() => setDarkMode((current) => !current)}
-            >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button
-              className="icon-button locale-button"
-              type="button"
-              title={t('language')}
-              aria-label={t('language')}
-              onClick={() => setLocale((current) => (current === 'en' ? 'ru' : 'en'))}
-            >
-              <span className="locale-code">{locale.toUpperCase()}</span>
-            </button>
-            <button
-              className="toolbar-signout"
-              disabled={authBusy}
-              type="button"
-              onClick={handleLogout}
-            >
-              <LogOut size={16} />
-              <span>{authBusy ? t('signingOut') : t('signOut')}</span>
-            </button>
+            <div className="toolbar-action-group">
+              {selectedNote ? (
+                <>
+                  <button
+                    className={`icon-button${draft.is_pinned ? ' icon-button--active' : ''}`}
+                    type="button"
+                    onClick={() => updateDraftFlag('is_pinned')}
+                  >
+                    <Pin size={16} />
+                  </button>
+                  <button
+                    className={`icon-button${draft.is_favorite ? ' icon-button--active' : ''}`}
+                    type="button"
+                    onClick={() => updateDraftFlag('is_favorite')}
+                  >
+                    <Star size={16} />
+                  </button>
+                  <button
+                    className={`icon-button${draft.is_archived ? ' icon-button--active' : ''}`}
+                    type="button"
+                    onClick={() => updateDraftFlag('is_archived')}
+                  >
+                    <Archive size={16} />
+                  </button>
+                </>
+              ) : null}
+              <button className="icon-button" type="button" onClick={handleExportNote}>
+                <Download size={16} />
+              </button>
+            </div>
+            <div className="toolbar-filter-field toolbar-filter-field--tags">
+              <input
+                className="toolbar-tags"
+                placeholder={t('tags')}
+                type="text"
+                value={tagInput}
+                onBlur={() => applyTags(tagInput)}
+                onChange={(event) => setTagInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    applyTags(tagInput)
+                  }
+                }}
+              />
+            </div>
+            <div className="toolbar-filter-field toolbar-filter-field--search">
+              <Search className="toolbar-filter-field__icon" size={18} aria-hidden="true" />
+              <input
+                className="toolbar-search"
+                placeholder={t('search')}
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
+            </div>
+            <div className="toolbar-preferences-group">
+              <button
+                className="icon-button toolbar-theme-button"
+                type="button"
+                title={darkMode ? t('lightTheme') : t('darkTheme')}
+                aria-label={darkMode ? t('switchLight') : t('switchDark')}
+                onClick={() => setDarkMode((current) => !current)}
+              >
+                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <button
+                className="icon-button locale-button"
+                type="button"
+                title={t('language')}
+                aria-label={t('language')}
+                onClick={() => setLocale((current) => (current === 'en' ? 'ru' : 'en'))}
+              >
+                <span className="locale-code">{locale.toUpperCase()}</span>
+              </button>
+              <button
+                className="icon-button toolbar-signout"
+                disabled={authBusy}
+                type="button"
+                title={authBusy ? t('signingOut') : t('signOut')}
+                aria-label={authBusy ? t('signingOut') : t('signOut')}
+                onClick={handleLogout}
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
           </div>
         </header>
 
         <div className="notes-stage">
-          <div className="notes-stage__meta">
-            <span>{selectedNote ? formatDate(selectedNote.edit_time, locale) : t('noNoteSelected')}</span>
-            <span>{saveState === 'saving' ? t('saving') : saveState === 'dirty' ? t('unsaved') : notice}</span>
-            {selectedNote ? (
-              <span>
-                {draft.is_pinned ? t('pinned') : draft.is_favorite ? t('favorite') : draft.is_archived ? t('archived') : t('saved')}
-              </span>
-            ) : null}
-          </div>
-
           {selectedNote ? (
             <article
               className={`notes-canvas${dragActive ? ' notes-canvas--drag' : ''}`}
@@ -1420,6 +1546,8 @@ function App() {
                 }}
               />
 
+              <div className="notes-title-divider" aria-hidden="true" />
+
               {draft.tags.length ? (
                 <div className="tag-cloud">
                   {draft.tags.map((tag) => (
@@ -1444,24 +1572,164 @@ function App() {
                 <EditorContent editor={editor} />
               </div>
 
+              <nav className="mobile-editor-toolbar" aria-label={t('moreActions')}>
+                <button
+                  className={`icon-button${toolbarState?.bold ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label="Bold"
+                  onClick={() => editor?.chain().focus().toggleBold().run()}
+                >
+                  <Bold size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.italic ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label="Italic"
+                  onClick={() => editor?.chain().focus().toggleItalic().run()}
+                >
+                  <Italic size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.underline ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('inlineCode')}
+                  onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                >
+                  <UnderlineIcon size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.strike ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label="Strikethrough"
+                  onClick={() => editor?.chain().focus().toggleStrike().run()}
+                >
+                  <Strikethrough size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.code ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('inlineCode')}
+                  onClick={() => editor?.chain().focus().toggleCode().run()}
+                >
+                  <Code2 size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.codeBlock ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('codeBlock')}
+                  onClick={handleCodeBlock}
+                >
+                  <SquareCode size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.highlight ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('purpleText')}
+                  onClick={() => editor?.chain().focus().toggleHighlight().run()}
+                >
+                  <Highlighter size={18} />
+                </button>
+                <button
+                  className="icon-button"
+                  type="button"
+                  aria-label={t('createLink')}
+                  onClick={handleSetLink}
+                >
+                  <Link2 size={18} />
+                </button>
+                <button
+                  className="icon-button"
+                  disabled={!toolbarState?.link}
+                  type="button"
+                  aria-label={t('removeLink')}
+                  onClick={handleUnsetLink}
+                >
+                  <Unlink size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.heading1 ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('title')}
+                  onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
+                >
+                  <Heading1 size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.heading2 ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('heading')}
+                  onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+                >
+                  <Heading2 size={18} />
+                </button>
+                <button
+                  className="icon-button"
+                  type="button"
+                  aria-label={t('blockQuote')}
+                  onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+                >
+                  <Quote size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.bulletList ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('bulletList')}
+                  onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                >
+                  <List size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.orderedList ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('numberedList')}
+                  onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                >
+                  <ListOrdered size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.taskList ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('checklist')}
+                  onClick={() => editor?.chain().focus().toggleTaskList().run()}
+                >
+                  <CheckSquare size={18} />
+                </button>
+                <button
+                  className={`icon-button${toolbarState?.table ? ' icon-button--active' : ''}`}
+                  type="button"
+                  aria-label={t('table')}
+                  onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                >
+                  <Table2 size={18} />
+                </button>
+                <button
+                  className="icon-button"
+                  type="button"
+                  aria-label={t('image')}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <ImagePlus size={18} />
+                </button>
+              </nav>
+
               <footer className="notes-footer">
                 <div className="notes-footer__stats">
+                  <span>{t('savedAt', { date: formatDate(selectedNote.edit_time) })}</span>
+                  {saveState === 'saving' || saveState === 'dirty' ? (
+                    <span>{saveState === 'saving' ? t('saving') : t('unsaved')}</span>
+                  ) : null}
                   <span>{t('words', { count: wordCount })}</span>
-                  <span>{t('minRead', { count: readingTime })}</span>
-                  <span>{draft.tags.length ? t('tagCount', { count: draft.tags.length }) : t('noTags')}</span>
                   <span>{draft.summary ? t('summaryChars', { count: draft.summary.length }) : t('noSummary')}</span>
                 </div>
                 <div className="notes-footer__actions">
-                  <button className="ghost-button" type="button" onClick={() => void handleDuplicateNote()}>
-                    <Copy size={14} />
-                    <span>{t('duplicate')}</span>
+                  <button className="notes-footer__action-button" type="button" title={t('duplicate')} aria-label={t('duplicate')} onClick={() => void handleDuplicateNote()}>
+                    <Copy size={18} />
                   </button>
-                  <button className="ghost-button" type="button" onClick={() => void persistCurrentNote(t('savedManually'))}>
-                    {t('save')}
+                  <button className="notes-footer__action-button" type="button" title={t('save')} aria-label={t('save')} onClick={() => void persistCurrentNote(t('savedManually'))}>
+                    <Check size={18} />
                   </button>
-                  <button className="ghost-button ghost-button--danger" disabled={deleteBusy} type="button" onClick={() => void handleDeleteNote()}>
-                    <Trash2 size={14} />
-                    <span>{deleteBusy ? t('deleting') : t('delete')}</span>
+                  <button className="notes-footer__action-button notes-footer__action-button--danger" disabled={deleteBusy} type="button" title={deleteBusy ? t('deleting') : t('delete')} aria-label={deleteBusy ? t('deleting') : t('delete')} onClick={() => void handleDeleteNote()}>
+                    <Trash2 size={18} />
                   </button>
                 </div>
               </footer>

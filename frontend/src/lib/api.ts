@@ -24,6 +24,28 @@ export function openNoteEvents() {
   return new WebSocket(`${protocol}//${window.location.host}${API_BASE_URL}/events`)
 }
 
+function readErrorDetail(detail: unknown): string | null {
+  if (typeof detail === 'string' && detail.trim()) {
+    return detail
+  }
+
+  if (!Array.isArray(detail)) {
+    return null
+  }
+
+  const messages = detail.flatMap((item) => {
+    if (!item || typeof item !== 'object') return []
+    const error = item as { loc?: unknown; msg?: unknown }
+    if (typeof error.msg !== 'string') return []
+    const field = Array.isArray(error.loc)
+      ? error.loc.filter((value) => value !== 'body').join('.')
+      : ''
+    return [field ? `${field}: ${error.msg}` : error.msg]
+  })
+
+  return messages.length ? messages.join(' ') : null
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: 'include',
@@ -39,9 +61,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let message = 'Request failed.'
 
     try {
-      const data = (await response.json()) as { detail?: string }
-      if (data.detail) {
-        message = data.detail
+      const data = (await response.json()) as { detail?: unknown }
+      const detail = readErrorDetail(data.detail)
+      if (detail) {
+        message = detail
       }
     } catch {
       message = response.statusText || message

@@ -1,4 +1,3 @@
-import type { Locale } from '../i18n'
 import type { Note, NotePayload } from '../types'
 
 export const defaultDraft: NotePayload = {
@@ -11,14 +10,11 @@ export const defaultDraft: NotePayload = {
   is_archived: false,
 }
 
-export function formatDate(value: string, locale: Locale) {
-  return new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-US', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
+export function formatDate(value: string) {
+  const date = new Date(value)
+  const pad = (part: number) => String(part).padStart(2, '0')
+
+  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}, ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 export function sortNotes(items: Note[]) {

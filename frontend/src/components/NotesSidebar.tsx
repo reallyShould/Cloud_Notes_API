@@ -1,4 +1,4 @@
-import { SquarePen } from 'lucide-react'
+import { SquarePen, X } from 'lucide-react'
 
 import type { TranslationKey } from '../i18n'
 import { htmlToPlainText } from '../lib/note-utils'
@@ -16,10 +16,12 @@ interface NotesSidebarProps {
   busy: boolean
   counts: Record<Shelf, number>
   hidden: boolean
+  mobileOpen: boolean
   notes: Note[]
   selectedNoteId: number | null
   t: Translator
   onCreate: () => void
+  onClose: () => void
   onSelect: (noteId: number) => void
   onShelfChange: (shelf: Shelf) => void
 }
@@ -37,16 +39,26 @@ export function NotesSidebar({
   busy,
   counts,
   hidden,
+  mobileOpen,
   notes,
   selectedNoteId,
   t,
   onCreate,
+  onClose,
   onSelect,
   onShelfChange,
 }: NotesSidebarProps) {
   return (
-    <aside className={`notes-sidebar${hidden ? ' notes-sidebar--hidden' : ''}`}>
+    <aside className={`notes-sidebar${hidden ? ' notes-sidebar--hidden' : ''}${mobileOpen ? ' notes-sidebar--mobile-open' : ''}`}>
       <div className="notes-sidebar__top">
+        <button
+          className="icon-button notes-sidebar__close"
+          type="button"
+          aria-label={t('close')}
+          onClick={onClose}
+        >
+          <X size={18} />
+        </button>
         <button className="icon-button" type="button" onClick={onCreate}>
           <SquarePen size={16} />
         </button>
