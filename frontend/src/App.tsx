@@ -332,7 +332,7 @@ function App() {
     setToasts((current) => [...current, nextToast])
     window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== nextToast.id))
-    }, 2600)
+    }, 7000)
   }, [])
 
   useEffect(() => {
@@ -495,7 +495,10 @@ function App() {
     setToolbarOpen(false)
 
     if (editor) {
-      editor.commands.setContent(payload.text || '<p></p>', { emitUpdate: false })
+      const content = payload.text || '<p></p>'
+      if (editor.getHTML() !== content) {
+        editor.commands.setContent(content, { emitUpdate: false })
+      }
     }
   }, [editor])
 
@@ -583,6 +586,9 @@ function App() {
       socket = openNoteEvents()
       socket.onmessage = (message) => {
         const event = JSON.parse(message.data as string) as NoteEvent
+        if (event.source_client_id === window.localStorage.getItem('cloud-notes-client-id')) {
+          return
+        }
         if (event.type === 'note_deleted') {
           setNotes((current) => current.filter((note) => note.id !== event.note_id))
           if (selectedNoteIdRef.current === event.note_id) {

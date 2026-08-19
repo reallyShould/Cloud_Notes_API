@@ -16,8 +16,23 @@ export class ApiError extends Error {
 }
 
 export type NoteEvent =
-  | { type: 'note_created' | 'note_updated'; note: Note }
-  | { type: 'note_deleted'; note_id: number }
+  | {
+      type: 'note_created' | 'note_updated'
+      note: Note
+      source_client_id?: string | null
+    }
+  | { type: 'note_deleted'; note_id: number; source_client_id?: string | null }
+
+const clientIdStorageKey = 'cloud-notes-client-id'
+
+function getClientId() {
+  const existing = window.localStorage.getItem(clientIdStorageKey)
+  if (existing) return existing
+
+  const clientId = window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
+  window.localStorage.setItem(clientIdStorageKey, clientId)
+  return clientId
+}
 
 export function openNoteEvents() {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -51,6 +66,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     credentials: 'include',
     headers: {
       Accept: 'application/json',
+      'X-Client-Id': getClientId(),
       ...(init?.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
       ...init?.headers,
     },

@@ -11,7 +11,8 @@ export const defaultDraft: NotePayload = {
 }
 
 export function formatDate(value: string) {
-  const date = new Date(value)
+  const hasTimeZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)
+  const date = new Date(hasTimeZone ? value : `${value}Z`)
   const pad = (part: number) => String(part).padStart(2, '0')
 
   return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}, ${pad(date.getHours())}:${pad(date.getMinutes())}`

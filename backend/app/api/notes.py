@@ -1,6 +1,6 @@
 import re
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, case, desc
@@ -30,6 +30,11 @@ def normalize_tags(tags: list[str]) -> list[str]:
 
     return normalized[:12]
 
+
+def event_source(request: Request) -> str | None:
+    client_id = request.headers.get("X-Client-Id", "").strip()
+    return client_id[:128] or None
+
 def serialize_note(note: Note) -> NotePublic:
     normalized_text = LEGACY_ATTACHMENT_URL.sub(
         "/api/attachments/download/",
@@ -53,7 +58,12 @@ def serialize_note(note: Note) -> NotePublic:
 
 
 @notes_router.post("", response_model=NotePublic)
-async def create_note(userdata: NoteCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def create_note(
+    userdata: NoteCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     note = Note(
         title=userdata.title,
         text=userdata.text,
@@ -70,7 +80,11 @@ async def create_note(userdata: NoteCreate, db: AsyncSession = Depends(get_db), 
     result = serialize_note(note)
     await realtime_hub.publish(
         current_user.id,
-        {"type": "note_created", "note": result.model_dump(mode="json")},
+        {
+            "type": "note_created",
+            "note": result.model_dump(mode="json"),
+            "source_client_id": event_source(request),
+        },
     )
     return result
 
@@ -97,7 +111,12 @@ async def get_note(note_id: int, db: AsyncSession = Depends(get_db), current_use
     return serialize_note(note)
 
 @notes_router.delete("/{note_id}")
-async def delete_note(note_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def delete_note(
+    note_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     query = select(Note).where(Note.creator_id == current_user.id, Note.id == note_id)
     result = await db.execute(query)
     note = result.scalar_one_or_none()
@@ -107,7 +126,11 @@ async def delete_note(note_id: int, db: AsyncSession = Depends(get_db), current_
     await db.commit()
     await realtime_hub.publish(
         current_user.id,
-        {"type": "note_deleted", "note_id": note_id},
+        {
+            "type": "note_deleted",
+            "note_id": note_id,
+            "source_client_id": event_source(request),
+        },
     )
     return {"message": "Note deleted successfully"}
 
@@ -115,6 +138,7 @@ async def delete_note(note_id: int, db: AsyncSession = Depends(get_db), current_
 async def update_note(
     note_id: int,
     userdata: NoteUpdate,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -149,6 +173,10 @@ async def update_note(
     result = serialize_note(note)
     await realtime_hub.publish(
         current_user.id,
-        {"type": "note_updated", "note": result.model_dump(mode="json")},
+        {
+            "type": "note_updated",
+            "note": result.model_dump(mode="json"),
+            "source_client_id": event_source(request),
+        },
     )
     return result
