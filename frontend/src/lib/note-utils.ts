@@ -32,6 +32,19 @@ export function htmlToPlainText(value: string) {
   return document.body.textContent?.replace(/\s+/g, ' ').trim() ?? ''
 }
 
+export function htmlToPreviewText(value: string) {
+  if (!value) return ''
+
+  const document = new DOMParser().parseFromString(value, 'text/html')
+  const blocks = Array.from(
+    document.body.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre'),
+  )
+    .map((block) => block.textContent?.replace(/\s+/g, ' ').trim() ?? '')
+    .filter(Boolean)
+
+  return (blocks.length ? blocks.join('\n') : htmlToPlainText(value)).slice(0, 280)
+}
+
 export function extractSummary(value: string) {
   return htmlToPlainText(value).slice(0, 280)
 }

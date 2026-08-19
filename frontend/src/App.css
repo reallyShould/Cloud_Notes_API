@@ -172,7 +172,7 @@
 
 .notes-app {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: 272px minmax(0, 1fr);
   gap: 0;
   max-width: 100%;
   min-height: 100vh;
@@ -188,7 +188,7 @@
 
 .notes-sidebar {
   min-height: 100vh;
-  padding: 14px 12px;
+  padding: 12px 10px;
   border-right: 1px solid #d8d8dc;
   background: rgba(242, 242, 247, 0.96);
   box-sizing: border-box;
@@ -215,18 +215,31 @@
 
 .notes-sidebar__top {
   justify-content: flex-end;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
+}
+
+.icon-button.notes-sidebar__create {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #2c2c2e;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+}
+
+.notes-sidebar__create:hover {
+  background: #48484a;
 }
 
 .notes-sidebar__section {
   justify-content: space-between;
   color: #8e8e93;
-  margin-bottom: 14px;
+  margin: 0 2px 9px;
 }
 
 .notes-sidebar__section h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.94rem;
   color: #1d1d1f;
 }
 
@@ -250,21 +263,26 @@
 
 .notes-list--dark {
   display: grid;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 6px;
+  margin-top: 10px;
 }
 
 .sidebar-shelves {
   display: grid;
-  gap: 6px;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid #dedee2;
+  border-radius: 14px;
+  background: rgba(229, 229, 234, 0.52);
 }
 
 .sidebar-shelf {
   border: 0;
-  border-radius: 14px;
+  border-radius: 9px;
   background: transparent;
   color: #515154;
-  padding: 8px 10px;
+  padding: 6px 8px;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -280,18 +298,18 @@
 
 .note-row {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   text-align: left;
-  padding: 12px 10px;
+  padding: 9px;
   border: 0;
-  border-radius: 16px;
+  border-radius: 12px;
   background: transparent;
   color: #1d1d1f;
   cursor: pointer;
 }
 
 .note-row strong {
-  font-size: 1rem;
+  font-size: 0.94rem;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -304,10 +322,14 @@
   color: #8e8e93;
 }
 
-.note-row span {
+.note-row__preview {
   display: -webkit-box;
   -webkit-box-orient: vertical;
+  min-height: 2.5em;
+  line-height: 1.35;
+  font-size: 0.88rem;
   overflow: hidden;
+  white-space: pre-line;
   -webkit-line-clamp: 2;
 }
 
@@ -1156,6 +1178,11 @@
   background: #3a3a3c;
 }
 
+.notes-app--dark .sidebar-shelves {
+  border-color: #3a3a3c;
+  background: rgba(28, 28, 30, 0.48);
+}
+
 .notes-app--dark .note-row--active {
   background: #f2f2f7;
   color: #1c1c1e;
@@ -1204,6 +1231,16 @@
 .notes-app--dark .toolbar-pill__button.is-active {
   background: #f2f2f7;
   color: #1c1c1e;
+}
+
+.notes-app--dark .notes-sidebar__create {
+  background: #f2f2f7;
+  color: #1c1c1e;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+}
+
+.notes-app--dark .notes-sidebar__create:hover {
+  background: #ffffff;
 }
 
 .notes-app--dark .toolbar-pill {
