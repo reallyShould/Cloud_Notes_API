@@ -27,7 +27,7 @@ Self-hosted cloud notes with a focused React editor, FastAPI backend, PostgreSQL
 [![Caddy](https://img.shields.io/badge/caddy-grey?style=for-the-badge&logo=caddy)](https://caddyserver.com)
 
 - **Frontend:** React 19, TypeScript, Vite, TipTap, and Lucide icons
-- **Backend:** FastAPI, Pydantic, and async SQLAlchemy 2.0
+- **Backend:** FastAPI, Pydantic, async SQLAlchemy 2.0, and Redis pub/sub
 - **Database:** PostgreSQL 16
 - **Authentication:** JWT in HttpOnly cookies with bcrypt password hashing
 - **Web server:** Caddy providing automatic HTTPS in front of the internal Nginx service
@@ -63,7 +63,7 @@ Docker or OrbStack is the only requirement. Python, Node.js, Nginx, and PostgreS
    - Application: `https://notes.example.com`
    - API documentation: `https://notes.example.com/api/docs`
 
-Caddy obtains and renews the public TLS certificate automatically. PostgreSQL, FastAPI, Nginx, and the Vite build are reachable only through the private Docker network.
+Caddy obtains and renews the public TLS certificate automatically. PostgreSQL, Redis, FastAPI, Nginx, and the Vite build are reachable only through the private Docker network.
 
 ## 🧪 Local HTTP Testing
 
@@ -138,6 +138,20 @@ Apply configuration changes with:
 docker compose up -d --build
 ```
 
+Database migrations run automatically before the API starts. To inspect or apply
+them manually, use:
+
+```bash
+docker compose run --rm server alembic current
+docker compose run --rm server alembic upgrade head
+```
+
+Create a migration after changing SQLAlchemy models with:
+
+```bash
+docker compose run --rm server alembic revision --autogenerate -m "describe change"
+```
+
 ## ✅ Production Checklist
 
 Before exposing the application to the internet:
@@ -193,6 +207,7 @@ Before exposing the application to the internet:
 | Nginx frontend | 80 | Not published | Docker network only |
 | FastAPI backend | 8000 | Not published | Docker network only |
 | PostgreSQL | 5432 | Not published | Docker network only |
+| Redis | 6379 | Not published | Docker network only |
 
 Do not forward ports 5432, 8000, or the former frontend port 8080 from the router.
 

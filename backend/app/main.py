@@ -1,36 +1,24 @@
 import os
-import asyncio
 import shutil
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from .database import Base, engine
-from .models import User, Note
+from .database import engine
 from .api.users import user_router
 from .api.notes import notes_router
 from .api.system import system_router
 from .api.attachments import attachments_router
 from .realtime import realtime_hub
+from .rate_limit import login_rate_limiter
 from .utils import decode_access_token
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    retries = 5
-    while retries > 0:
-        try:
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-            print("Successfully connected to the database and created tables!")
-            break
-        except Exception as e:
-            retries -= 1
-            print(f"Database is not ready yet. Retrying in 2 seconds... ({retries} retries left)")
-            if retries == 0:
-                raise RuntimeError("Could not connect to the database") from e
-            await asyncio.sleep(2)
-
+    redis_url = os.getenv("REDIS_URL")
+    await realtime_hub.start(redis_url)
+    await login_rate_limiter.start(redis_url)
     upload_dir = Path(os.getenv("UPLOAD_DIR", "uploads"))
     legacy_upload_dir = Path("/legacy-uploads")
     upload_dir.mkdir(parents=True, exist_ok=True)
@@ -43,6 +31,8 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        await login_rate_limiter.stop()
+        await realtime_hub.stop()
         await engine.dispose()
 
 app = FastAPI(
@@ -85,6 +75,8 @@ async def realtime_events(websocket: WebSocket):
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    finally:
         realtime_hub.disconnect(user_id, websocket)
 
 @app.get("/")
