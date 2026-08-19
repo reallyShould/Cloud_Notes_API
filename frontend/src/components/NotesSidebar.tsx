@@ -1,7 +1,7 @@
 import { SquarePen, X } from 'lucide-react'
 
 import type { TranslationKey } from '../i18n'
-import { htmlToPlainText } from '../lib/note-utils'
+import { htmlToPreviewText } from '../lib/note-utils'
 import type { Note } from '../types'
 
 export type Shelf = 'all' | 'pinned' | 'favorites' | 'archived'
@@ -59,7 +59,13 @@ export function NotesSidebar({
         >
           <X size={18} />
         </button>
-        <button className="icon-button" type="button" onClick={onCreate}>
+        <button
+          className="icon-button notes-sidebar__create"
+          type="button"
+          aria-label={t('newNote')}
+          title={t('newNote')}
+          onClick={onCreate}
+        >
           <SquarePen size={16} />
         </button>
       </div>
@@ -93,7 +99,9 @@ export function NotesSidebar({
             onClick={() => onSelect(note.id)}
           >
             <strong>{note.title}</strong>
-            <span>{note.summary || htmlToPlainText(note.text ?? '') || t('emptyNote')}</span>
+            <span className="note-row__preview">
+              {htmlToPreviewText(note.text ?? '') || note.summary || t('emptyNote')}
+            </span>
           </button>
         ))}
         {!busy && !notes.length ? (

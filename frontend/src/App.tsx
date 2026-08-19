@@ -267,6 +267,7 @@ function App() {
   const titleRef = useRef<HTMLInputElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const hydratedNoteIdRef = useRef<number | null>(null)
+  const noteSelectionsRef = useRef(new Map<number, { from: number; to: number }>())
   const dragDepthRef = useRef(0)
   const localeRef = useRef(locale)
   const t = useCallback(
@@ -453,6 +454,15 @@ function App() {
         summary: extractSummary(html),
       }))
     },
+    onSelectionUpdate: ({ editor: instance }) => {
+      const noteId = selectedNoteIdRef.current
+      if (noteId === null) return
+
+      noteSelectionsRef.current.set(noteId, {
+        from: instance.state.selection.from,
+        to: instance.state.selection.to,
+      })
+    },
   })
 
   const toolbarState = useEditorState({
@@ -484,7 +494,7 @@ function App() {
   const plainText = htmlToPlainText(draft.text ?? '')
   const wordCount = plainText ? plainText.split(/\s+/).length : 0
 
-  const syncDraft = useCallback((nextNote: Note | null) => {
+  const syncDraft = useCallback((nextNote: Note | null, restoreSavedSelection = false) => {
     const payload = nextNote ? noteToPayload(nextNote) : defaultDraft
     draftBaseEditTimeRef.current = nextNote?.edit_time ?? null
     draftRevisionRef.current += 1
@@ -497,7 +507,28 @@ function App() {
     if (editor) {
       const content = payload.text || '<p></p>'
       if (editor.getHTML() !== content) {
+        const wasFocused = editor.isFocused
+        const previousSelection = editor.state.selection
+        const savedSelection = nextNote && restoreSavedSelection
+          ? noteSelectionsRef.current.get(nextNote.id)
+          : undefined
+
+        // Recreate the native caret after replacing the ProseMirror document.
+        // Without the blur, a browser can keep painting a stale DOM caret.
+        editor.commands.blur()
         editor.commands.setContent(content, { emitUpdate: false })
+
+        const selectionToRestore = savedSelection ?? (wasFocused ? previousSelection : undefined)
+        if (selectionToRestore) {
+          const lastPosition = editor.state.doc.content.size
+          editor.commands.setTextSelection({
+            from: Math.min(selectionToRestore.from, lastPosition),
+            to: Math.min(selectionToRestore.to, lastPosition),
+          })
+        }
+        if (wasFocused || savedSelection) {
+          editor.commands.focus()
+        }
       }
     }
   }, [editor])
@@ -653,7 +684,7 @@ function App() {
 
     const nextNote = notes.find((note) => note.id === selectedNoteId) ?? null
     hydratedNoteIdRef.current = selectedNoteId
-    syncDraft(nextNote)
+    syncDraft(nextNote, true)
   }, [editor, notes, selectedNoteId, syncDraft])
 
   const persistCurrentNote = useCallback(async (successNotice?: string, silent = false) => {
